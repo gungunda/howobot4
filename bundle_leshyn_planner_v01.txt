@@ -1,0 +1,1059 @@
+FILE_INDEX_START
+assets/styles.css
+index.html
+src/app.js
+src/config.js
+src/entities/entities.js
+src/storage/storage.js
+src/ui/appView.js
+src/ui/pages/Calendar/presenter.js
+src/ui/pages/Calendar/view.js
+src/ui/pages/Dashboard/presenter.js
+src/ui/pages/Dashboard/view.js
+src/ui/pages/Schedule/presenter.js
+src/ui/pages/Schedule/view.js
+src/usecases/CreateTask.js
+src/usecases/LoadDashboard.js
+src/usecases/RenameTask.js
+src/usecases/ResetDay.js
+src/usecases/SetMinutes.js
+src/usecases/SetProgress.js
+src/usecases/ToggleClosed.js
+src/usecases/UpdateUnload.js
+src/utils/date.js
+FILE_INDEX_END
+// /assets/styles.css
+/* Минималистичные стили. Без фреймворков. Понятные классы. */
+:root {
+  --bg: #ffffff;
+  --fg: #1f2328;
+  --muted: #6a737d;
+  --primary: #0b5fff;
+  --border: #e2e8f0;
+  --card: #f8fafc;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  background: var(--bg);
+  color: var(--fg);
+}
+.app-header, .app-footer {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.app-footer { border-top: 1px solid var(--border); border-bottom: none; }
+h1 { margin: 0 0 4px; font-size: 18px; }
+nav button {
+  margin-right: 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+}
+nav button.active {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.app-root { padding: 16px; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+.muted { color: var(--muted); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.btn {
+  padding: 6px 10px; border: 1px solid var(--border); background: #fff; border-radius: 6px; cursor: pointer;
+}
+.btn-primary { border-color: var(--primary); color: #fff; background: var(--primary); }
+.btn-danger { color: #fff; background: #ef4444; border-color: #ef4444; }
+.input, .select {
+  padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; min-width: 0;
+}
+.range { width: 160px; }
+.section-title { margin: 12px 0 6px; font-weight: 600; }
+.kpi { display: flex; gap: 12px; margin: 8px 0; font-size: 14px; }
+.kpi .badge { padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border); background: #fff; }
+// /index.html
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Лёшин планировщик</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <h1>Лёшин планировщик</h1>
+      <nav id="app-nav"></nav>
+    </header>
+    <main id="app-root" class="app-root"></main>
+    <footer class="app-footer">
+      <small>v0.1 • MVP • localStorage</small>
+    </footer>
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>
+// /src/app.js
+/**
+ * Точка входа приложения.
+ * - Роутинг между 3 экранами.
+ * - Инициализация локали времени (берём с устройства).
+ * - Периодическая чистка старых day_*.
+ * - Навигация без библиотек.
+ */
+import { config } from "./config.js";
+import * as date from "./utils/date.js";
+import { cleanupOldDays, initStorage } from "./storage/storage.js";
+import { renderAppNav } from "./ui/appView.js";
+import { DashboardPresenter } from "./ui/pages/Dashboard/presenter.js";
+import { SchedulePresenter } from "./ui/pages/Schedule/presenter.js";
+import { CalendarPresenter } from "./ui/pages/Calendar/presenter.js";
+
+const root = document.getElementById("app-root");
+const navMount = document.getElementById("app-nav");
+
+/** Простая «навигация» на кнопках */
+const routes = {
+  dashboard: () => new DashboardPresenter(root),
+  schedule:  () => new SchedulePresenter(root),
+  calendar:  () => new CalendarPresenter(root),
+};
+
+function mount(route) {
+  root.innerHTML = "";
+  const make = routes[route] || routes.dashboard;
+  const p = make();
+  p.render();
+  highlight(route);
+}
+
+function highlight(route) {
+  [...navMount.querySelectorAll("button")].forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.route === route);
+  });
+}
+
+// Рендерим навигацию
+renderAppNav(navMount, (route) => mount(route));
+
+// Инициализация стораджа
+initStorage();
+cleanupOldDays(config.daysToKeep);
+
+// Первая загрузка — dashboard
+mount("dashboard");
+
+// Делаем утилиты дат доступными для консоли (удобно ребёнку смотреть)
+window.__planner = { date };
+// /src/config.js
+/**
+ * Простейшие настройки приложения.
+ * Держим числа/флаги отдельно от кода.
+ */
+export const config = {
+  /** Сколько дней хранить day_* в истории (по умолчанию — 7). */
+  daysToKeep: 7,
+  /** Шаг изменения прогресса кнопками. */
+  progressStep: 10,
+};
+// /src/entities/entities.js
+/**
+ * Доменные сущности: Task, Schedule, DayTasks.
+ * Простейные классы с инвариантами и короткими методами.
+ * JSDoc — на русском языке для понятности.
+ */
+import { clamp } from "../utils/date.js";
+
+/** @typedef {0|1|2|3|4|5|6} Weekday */
+
+/**
+ * Класс предмета/задачи.
+ * В расписании у задачи есть unloadDays (дни разгрузки).
+ * В DayTasks unloadDays всегда null.
+ */
+export class Task {
+  /**
+   * @param {object} p
+   * @param {string} p.id
+   * @param {string} p.title
+   * @param {number} p.minutes
+   * @param {number} p.progress   0..100
+   * @param {boolean} p.closed
+   * @param {Weekday[]|null} p.unloadDays
+   */
+  constructor({ id, title, minutes = 0, progress = 0, closed = false, unloadDays = null }) {
+    this.id = String(id);
+    this.title = String(title || "").trim();
+    this.minutes = Math.max(0, Math.floor(minutes || 0));
+    this.progress = clamp(Math.floor(progress || 0), 0, 100);
+    this.closed = !!closed;
+    this.unloadDays = Array.isArray(unloadDays) ? [...unloadDays] : null;
+    if (!this.title) throw new Error("Task.title не может быть пустым");
+  }
+  /** Переименовать предмет. */
+  rename(title) {
+    const t = String(title || "").trim();
+    if (!t) throw new Error("Название не может быть пустым");
+    this.title = t;
+  }
+  /** Установить минуты (целое, ≥0). */
+  setMinutes(mins) {
+    this.minutes = Math.max(0, Math.floor(mins || 0));
+  }
+  /** Установить прогресс, 0..100. */
+  setProgress(v) {
+    this.progress = clamp(Math.floor(v || 0), 0, 100);
+  }
+  /** Переключить флаг закрытости. */
+  toggleClosed() {
+    this.closed = !this.closed;
+  }
+  /** Возвращает копию задачи (для безопасного переноса между сущностями). */
+  clone() {
+    return new Task({
+      id: this.id, title: this.title, minutes: this.minutes,
+      progress: this.progress, closed: this.closed, unloadDays: this.unloadDays ? [...this.unloadDays] : null
+    });
+  }
+  /** Принудительно обнулить unloadDays (для DayTasks). */
+  withNoUnload() {
+    const c = this.clone();
+    c.unloadDays = null;
+    return c;
+  }
+}
+
+/**
+ * Недельное расписание.
+ * Хранит массивы Task по дням недели 0..6 (вс-пн... по стандарту JS).
+ * ВАЛИДАЦИЯ: «предшествующий дню» для разгрузки запрещён.
+ */
+export class Schedule {
+  /** @param {Record<Weekday, Task[]>|undefined} data */
+  constructor(data) {
+    /** @type {Record<Weekday, Task[]>} */
+    this.byDay = { 0:[],1:[],2:[],3:[],4:[],5:[],6:[] };
+    if (data) {
+      for (const k of Object.keys(this.byDay)) {
+        const arr = Array.isArray(data[k]) ? data[k] : [];
+        this.byDay[k] = arr.map(t => new Task(t));
+      }
+    }
+  }
+  /** Список задач для дня недели. */
+  list(day) { return this.byDay[day] || []; }
+  /** Добавить задачу в конкретный день недели. */
+  add(day, task) {
+    const arr = this.byDay[day]; if (!arr) throw new Error("Неверный день недели");
+    arr.push(new Task(task));
+  }
+  /** Удалить задачу по id из дня недели. */
+  remove(day, taskId) {
+    const arr = this.byDay[day]; if (!arr) return;
+    const i = arr.findIndex(t => t.id === taskId);
+    if (i >= 0) arr.splice(i, 1);
+  }
+  /** Найти задачу. */
+  find(day, taskId) {
+    const arr = this.byDay[day] || [];
+    return arr.find(t => t.id === taskId) || null;
+  }
+  /** Правка минут. */
+  setMinutes(day, taskId, mins) {
+    const t = this.find(day, taskId); if (!t) return;
+    t.setMinutes(mins);
+  }
+  /** Правка названия. */
+  rename(day, taskId, title) {
+    const t = this.find(day, taskId); if (!t) return;
+    t.rename(title);
+  }
+  /** Правка разгрузочных дней с запретом «предшественника». */
+  setUnloadDays(day, taskId, unloadDays) {
+    const t = this.find(day, taskId); if (!t) return;
+    const blocked = ((day + 6) % 7);
+    const clean = (Array.isArray(unloadDays) ? unloadDays : [])
+      .map(n => Number(n))
+      .filter(n => n >= 0 && n <= 6 && n !== blocked);
+    t.unloadDays = clean;
+  }
+}
+
+/**
+ * Оверрайд задач на конкретный календарный день.
+ * Здесь у каждой задачи unloadDays === null.
+ */
+export class DayTasks {
+  /** @param {string} date ISO YYYY-MM-DD */
+  constructor(date, tasks = []) {
+    this.date = String(date);
+    this.tasks = tasks.map(t => new Task(t).withNoUnload());
+  }
+  /** Создать пустой. */
+  static create(date, tasks=[]) { return new DayTasks(date, tasks); }
+  /** Добавить задачу (копия с unloadDays=null). */
+  addTask(task) { this.tasks.push(new Task(task).withNoUnload()); }
+  /** Удалить задачу. */
+  removeTask(taskId) {
+    const i = this.tasks.findIndex(t => t.id === taskId);
+    if (i >= 0) this.tasks.splice(i, 1);
+  }
+  /** Найти задачу. */
+  findTask(taskId) {
+    return this.tasks.find(t => t.id === taskId) || null;
+  }
+  /** Правка минут. */
+  setMinutes(taskId, mins) {
+    const t = this.findTask(taskId); if (!t) return;
+    t.setMinutes(mins);
+  }
+  /** Правка прогресса. */
+  setProgress(taskId, progress) {
+    const t = this.findTask(taskId); if (!t) return;
+    t.setProgress(progress);
+  }
+  /** Правка названия. */
+  rename(taskId, title) {
+    const t = this.findTask(taskId); if (!t) return;
+    t.rename(title);
+  }
+  /** Переключить флаг закрытия. */
+  toggleClosed(taskId) {
+    const t = this.findTask(taskId); if (!t) return;
+    t.toggleClosed();
+  }
+  /** Очистить день (пустой список). */
+  clear() {
+    this.tasks = [];
+  }
+}
+// /src/storage/storage.js
+/**
+ * Единое хранилище поверх localStorage.
+ * Ключи:
+ *  - schedule_v1         — недельный шаблон (весь целиком)
+ *  - day_YYYY-MM-DD      — оверрайд конкретного дня
+ * ВАЖНО: отдельных task_${id} нет. Задачи живут только внутри schedule/day.
+ */
+import { DayTasks, Schedule, Task } from "../entities/entities.js";
+import { toIsoDate } from "../utils/date.js";
+
+const KEY_SCHEDULE = "schedule_v1";
+
+/** Инициализация: создаём пустой schedule при отсутствии. */
+export function initStorage() {
+  if (!localStorage.getItem(KEY_SCHEDULE)) {
+    const empty = new Schedule();
+    saveSchedule(empty);
+  }
+}
+
+/** Простой генератор id: время + короткий суффикс. */
+export function genId() {
+  const suf = Math.random().toString(36).slice(2, 6);
+  return `${Date.now().toString(36)}${suf}`;
+}
+
+/** Сохранить недельное расписание. */
+export function saveSchedule(schedule) {
+  // сериализуем без методов: plain JSON
+  const plain = { 0:[],1:[],2:[],3:[],4:[],5:[],6:[] };
+  for (const d of Object.keys(plain)) {
+    plain[d] = (schedule.byDay[d] || []).map(t => ({
+      id: t.id, title: t.title, minutes: t.minutes, progress: t.progress,
+      closed: t.closed, unloadDays: t.unloadDays ? [...t.unloadDays] : []
+    }));
+  }
+  localStorage.setItem(KEY_SCHEDULE, JSON.stringify(plain));
+}
+
+/** Загрузить недельное расписание. */
+export function loadSchedule() {
+  const raw = localStorage.getItem(KEY_SCHEDULE);
+  if (!raw) return new Schedule();
+  try {
+    const obj = JSON.parse(raw);
+    return new Schedule(obj);
+  } catch {
+    return new Schedule();
+  }
+}
+
+/** Ключ day_* по ISO дате. */
+function dayKey(dateIso) {
+  return `day_${dateIso}`;
+}
+
+/** Сохранить DayTasks (обнуляем unloadDays у всех задач). */
+export function saveDay(dateIso, day) {
+  const iso = toIsoDate(new Date(dateIso));
+  const plain = {
+    date: iso,
+    tasks: day.tasks.map(t => ({
+      id: t.id, title: t.title, minutes: t.minutes, progress: t.progress, closed: t.closed, unloadDays: null
+    }))
+  };
+  localStorage.setItem(dayKey(iso), JSON.stringify(plain));
+}
+
+/** Загрузить DayTasks. Возвращает DayTasks или null. */
+export function loadDay(dateIso) {
+  const iso = toIsoDate(new Date(dateIso));
+  const raw = localStorage.getItem(dayKey(iso));
+  if (!raw) return null;
+  try {
+    const obj = JSON.parse(raw);
+    return new DayTasks(obj.date, obj.tasks);
+  } catch {
+    return null;
+  }
+}
+
+/** Убедиться, что DayTasks существует (иначе создать пустой). */
+export function ensureDay(dateIso) {
+  return loadDay(dateIso) || DayTasks.create(toIsoDate(new Date(dateIso)));
+}
+
+/** Удалить оверрайд дня (полностью). */
+export function deleteDay(dateIso) {
+  localStorage.removeItem(dayKey(toIsoDate(new Date(dateIso))));
+}
+
+/** Очистить старые day_* старше N дней от сегодня. */
+export function cleanupOldDays(daysToKeep) {
+  if (!Number.isFinite(daysToKeep) || daysToKeep <= 0) return;
+  const now = new Date();
+  const limit = new Date(now.getTime());
+  limit.setDate(limit.getDate() - daysToKeep);
+  const limitIso = toIsoDate(limit);
+  const keys = Object.keys(localStorage).filter(k => k.startsWith("day_"));
+  for (const k of keys) {
+    const iso = k.slice(4);
+    if (iso < limitIso) localStorage.removeItem(k);
+  }
+}
+
+/**
+ * Композиция D+1 для отображения:
+ * - base: задачи из расписания на нужный weekday
+ * - override: DayTasks (если есть)
+ */
+export function composeDPlus1View(dPlus1) {
+  const dateIso = toIsoDate(dPlus1);
+  const weekday = dPlus1.getDay();
+  const schedule = loadSchedule();
+  const base = schedule.list(weekday).map(t => new Task(t));
+  const override = loadDay(dateIso);
+  return { base, override };
+}
+// /src/ui/appView.js
+/**
+ * Верхняя навигация из трёх кнопок.
+ */
+const buttons = [
+  { route: "dashboard", label: "Дашборд" },
+  { route: "schedule", label: "Расписание" },
+  { route: "calendar", label: "Календарь" },
+];
+
+export function renderAppNav(mount, onRoute) {
+  mount.innerHTML = "";
+  buttons.forEach((b, i) => {
+    const btn = document.createElement("button");
+    btn.textContent = b.label;
+    btn.dataset.route = b.route;
+    if (i === 0) btn.classList.add("active");
+    btn.addEventListener("click", () => onRoute(b.route));
+    mount.appendChild(btn);
+  });
+}
+// /src/ui/pages/Calendar/presenter.js
+import * as date from "../../../utils/date.js";
+import { CalendarView } from "./view.js";
+
+export class CalendarPresenter {
+  constructor(mount) {
+    this.mount = mount;
+    this.baseDate = date.today();
+  }
+  render() {
+    this.view = new CalendarView(this.mount, {
+      baseDate: this.baseDate,
+      onToday: () => { this.baseDate = date.today(); this.render(); },
+      onShift: (days) => {
+        const d = new Date(this.baseDate.getTime());
+        d.setDate(d.getDate() + days);
+        this.baseDate = d;
+        this.render();
+      }
+    });
+    this.view.render();
+  }
+}
+// /src/ui/pages/Calendar/view.js
+import { toIsoDate, dPlus1 } from "../../../utils/date.js";
+
+export class CalendarView {
+  constructor(mount, handlers) {
+    this.mount = mount;
+    this.h = handlers;
+  }
+  render() {
+    this.mount.innerHTML = "";
+    const d = this.h.baseDate;
+    const wrap = document.createElement("div");
+    wrap.className = "card";
+    wrap.innerHTML = `
+      <div class="row">
+        <strong>Базовая дата (D):</strong>
+        <span>${toIsoDate(d)}</span>
+        <button class="btn" data-act="prev">−1 день</button>
+        <button class="btn" data-act="today">Сегодня</button>
+        <button class="btn" data-act="next">+1 день</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <span class="muted">На дашборде всегда показывается D+1: <strong>${toIsoDate(dPlus1(d))}</strong></span>
+      </div>
+    `;
+    wrap.querySelector('[data-act="prev"]').addEventListener("click", () => this.h.onShift(-1));
+    wrap.querySelector('[data-act="today"]').addEventListener("click", () => this.h.onToday());
+    wrap.querySelector('[data-act="next"]').addEventListener("click", () => this.h.onShift(1));
+    this.mount.appendChild(wrap);
+  }
+}
+// /src/ui/pages/Dashboard/presenter.js
+import * as date from "../../../utils/date.js";
+import { LoadDashboard } from "../../../usecases/LoadDashboard.js";
+import { SetProgress } from "../../../usecases/SetProgress.js";
+import { SetMinutes } from "../../../usecases/SetMinutes.js";
+import { ToggleClosed } from "../../../usecases/ToggleClosed.js";
+import { ResetDay } from "../../../usecases/ResetDay.js";
+import { DashboardView } from "./view.js";
+import { config } from "../../../config.js";
+
+export class DashboardPresenter {
+  constructor(mount) {
+    this.mount = mount;
+    this.baseDate = date.today();
+  }
+  render() {
+    const d1 = date.dPlus1(this.baseDate);
+    const vm = LoadDashboard(d1);
+    this.view = new DashboardView(this.mount, {
+      dateIso: date.toIsoDate(d1),
+      vm,
+      onStep: (taskId, sign) => this.onStep(taskId, sign),
+      onSlide: (taskId, value) => this.onSlide(taskId, value),
+      onToggle: (taskId) => this.onToggle(taskId),
+      onSetMinutes: (taskId, minutes) => this.onSetMinutes(taskId, minutes),
+      onResetDay: () => this.onResetDay(),
+    });
+    this.view.render();
+  }
+  refresh() { this.render(); }
+  onStep(taskId, sign) {
+    const d1 = date.dPlus1(this.baseDate);
+    SetProgress({ date: date.toIsoDate(d1), taskId, delta: sign * config.progressStep });
+    this.refresh();
+  }
+  onSlide(taskId, value) {
+    const d1 = date.dPlus1(this.baseDate);
+    SetProgress({ date: date.toIsoDate(d1), taskId, value: Number(value) });
+    this.refresh();
+  }
+  onToggle(taskId) {
+    const d1 = date.dPlus1(this.baseDate);
+    ToggleClosed({ taskId, date: date.toIsoDate(d1) });
+    this.refresh();
+  }
+  onSetMinutes(taskId, minutes) {
+    const d1 = date.dPlus1(this.baseDate);
+    SetMinutes({ taskId, minutes: Number(minutes), date: date.toIsoDate(d1) });
+    this.refresh();
+  }
+  onResetDay() {
+    const d1 = date.dPlus1(this.baseDate);
+    ResetDay({ date: date.toIsoDate(d1) });
+    this.refresh();
+  }
+}
+// /src/ui/pages/Dashboard/view.js
+import { minutesToHhmm } from "../../../utils/date.js";
+
+export class DashboardView {
+  constructor(mount, handlers) {
+    this.mount = mount;
+    this.handlers = handlers;
+  }
+  render() {
+    const { dateIso, vm } = this.handlers;
+    this.mount.innerHTML = "";
+    const header = document.createElement("div");
+    header.className = "row";
+    header.innerHTML = `<div class="section-title">Задачи на завтра (${dateIso})</div>
+      <button class="btn" id="reset-day">Очистить день</button>`;
+    header.querySelector("#reset-day").addEventListener("click", () => this.handlers.onResetDay());
+    this.mount.appendChild(header);
+
+    const kpi = document.createElement("div");
+    kpi.className = "kpi";
+    kpi.innerHTML = `
+      <div class="badge">Нагрузка: ${vm.metrics.load}</div>
+      <div class="badge">Выполнено: ${vm.metrics.done}</div>
+      <div class="badge">Осталось: ${vm.metrics.left}</div>
+      <div class="badge">Финиш: ${vm.metrics.finish}</div>
+    `;
+    this.mount.appendChild(kpi);
+
+    vm.tasks.forEach(t => this.mount.appendChild(this.renderTaskCard(t)));
+  }
+  renderTaskCard(t) {
+    const card = document.createElement("div");
+    card.className = "card";
+    const hhmm = minutesToHhmm(t.minutes);
+    card.innerHTML = `
+      <div class="row" style="justify-content: space-between;">
+        <strong>${t.title}</strong>
+        <span class="muted">${hhmm}</span>
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <button class="btn" data-step="-1">−10%</button>
+        <input class="range" type="range" min="0" max="100" step="1" value="${t.progress}">
+        <button class="btn" data-step="+1">+10%</button>
+        <span>${t.progress}%</span>
+        <button class="btn" data-action="toggle">${t.closed ? "Открыть" : "Закрыть"}</button>
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <label>Минуты:
+          <input class="input" type="number" min="0" step="5" value="${t.minutes}">
+        </label>
+        <button class="btn" data-action="save-minutes">Сохранить</button>
+      </div>
+    `;
+    card.querySelector('[data-step="-1"]').addEventListener("click", () => this.handlers.onStep(t.id, -1));
+    card.querySelector('[data-step="+1"]').addEventListener("click", () => this.handlers.onStep(t.id, +1));
+    card.querySelector('.range').addEventListener("input", (e) => this.handlers.onSlide(t.id, e.target.value));
+    card.querySelector('[data-action="toggle"]').addEventListener("click", () => this.handlers.onToggle(t.id));
+    card.querySelector('[data-action="save-minutes"]').addEventListener("click", () => {
+      const val = Number(card.querySelector('input[type="number"]').value);
+      this.handlers.onSetMinutes(t.id, val);
+    });
+    return card;
+  }
+}
+// /src/ui/pages/Schedule/presenter.js
+import { loadSchedule, saveSchedule, genId } from "../../../storage/storage.js";
+import { ScheduleView } from "./view.js";
+import { Task } from "../../../entities/entities.js";
+
+export class SchedulePresenter {
+  constructor(mount) {
+    this.mount = mount;
+  }
+  render() {
+    this.schedule = loadSchedule();
+    this.view = new ScheduleView(this.mount, {
+      schedule: this.schedule,
+      onAdd: (weekday, title, minutes) => this.onAdd(weekday, title, minutes),
+      onSetMinutes: (weekday, taskId, minutes) => this.onSetMinutes(weekday, taskId, minutes),
+      onRename: (weekday, taskId, title) => this.onRename(weekday, taskId, title),
+      onToggleUnload: (weekday, taskId, targetWeekday) => this.onToggleUnload(weekday, taskId, targetWeekday),
+      onRemove: (weekday, taskId) => this.onRemove(weekday, taskId),
+    });
+    this.view.render();
+  }
+  refresh() { this.render(); }
+  onAdd(weekday, title, minutes) {
+    const task = new Task({ id: genId(), title, minutes: Number(minutes)||0, progress: 0, closed: false, unloadDays: [] });
+    this.schedule.add(weekday, task);
+    saveSchedule(this.schedule);
+    this.refresh();
+  }
+  onSetMinutes(weekday, taskId, minutes) {
+    this.schedule.setMinutes(weekday, taskId, Number(minutes)||0);
+    saveSchedule(this.schedule);
+    this.refresh();
+  }
+  onRename(weekday, taskId, title) {
+    this.schedule.rename(weekday, taskId, title);
+    saveSchedule(this.schedule);
+    this.refresh();
+  }
+  onToggleUnload(weekday, taskId, w) {
+    const t = this.schedule.find(weekday, taskId);
+    if (!t) return;
+    const blocked = ((weekday + 6) % 7);
+    if (w === blocked) return;
+    const arr = new Set(t.unloadDays || []);
+    if (arr.has(w)) arr.delete(w); else arr.add(w);
+    this.schedule.setUnloadDays(weekday, taskId, [...arr]);
+    saveSchedule(this.schedule);
+    this.refresh();
+  }
+  onRemove(weekday, taskId) {
+    this.schedule.remove(weekday, taskId);
+    saveSchedule(this.schedule);
+    this.refresh();
+  }
+}
+// /src/ui/pages/Schedule/view.js
+import { minutesToHhmm } from "../../../utils/date.js";
+
+const DAY_NAMES = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+
+export class ScheduleView {
+  constructor(mount, handlers) {
+    this.mount = mount;
+    this.h = handlers;
+  }
+  render() {
+    this.mount.innerHTML = "";
+    for (let w = 0; w < 7; w++) {
+      this.mount.appendChild(this.renderDayBlock(w));
+    }
+  }
+  renderDayBlock(w) {
+    const wrap = document.createElement("div");
+    wrap.className = "card";
+    const head = document.createElement("div");
+    head.className = "row";
+    head.innerHTML = `<strong>${DAY_NAMES[w]}</strong>`;
+    wrap.appendChild(head);
+
+    const list = document.createElement("div");
+    (this.h.schedule.list(w) || []).forEach(t => list.appendChild(this.renderTaskRow(w, t)));
+    wrap.appendChild(list);
+
+    const form = document.createElement("div");
+    form.className = "row";
+    form.innerHTML = `
+      <input class="input" placeholder="Название" />
+      <input class="input" type="number" min="0" step="5" placeholder="Минуты" />
+      <button class="btn">Добавить</button>
+    `;
+    const [title, minutes, btn] = form.querySelectorAll("input,button");
+    btn.addEventListener("click", () => {
+      const t = String(title.value || "").trim();
+      const m = Number(minutes.value) || 0;
+      if (!t) return;
+      this.h.onAdd(w, t, m);
+    });
+    wrap.appendChild(form);
+    return wrap;
+  }
+  renderTaskRow(w, t) {
+    const row = document.createElement("div");
+    row.className = "row";
+    row.style.marginTop = "6px";
+    row.style.justifyContent = "space-between";
+    row.innerHTML = `
+      <div class="row">
+        <input class="input" value="${t.title}" style="min-width:200px" />
+        <input class="input" type="number" min="0" step="5" value="${t.minutes}" style="width:90px" />
+        <span class="muted">${minutesToHhmm(t.minutes)}</span>
+      </div>
+      <div class="row">
+        ${this.renderUnloadControls(w, t)}
+        <button class="btn" data-act="save">Сохранить</button>
+        <button class="btn btn-danger" data-act="remove">Удалить</button>
+      </div>
+    `;
+    const [title, minutes] = row.querySelectorAll('input.input');
+    row.querySelector('[data-act="save"]').addEventListener("click", () => {
+      this.h.onRename(w, t.id, title.value);
+      this.h.onSetMinutes(w, t.id, Number(minutes.value)||0);
+    });
+    row.querySelector('[data-act="remove"]').addEventListener("click", () => this.h.onRemove(w, t.id));
+    row.querySelectorAll('input[type="checkbox"][data-w]').forEach(ch => {
+      ch.addEventListener("change", () => {
+        const ww = Number(ch.dataset.w);
+        this.h.onToggleUnload(w, t.id, ww);
+      });
+    });
+    return row;
+  }
+  renderUnloadControls(w, t) {
+    const blocked = ((w + 6) % 7);
+    const sel = new Set(t.unloadDays || []);
+    let html = `<div class="row">`;
+    for (let ww=0; ww<7; ww++) {
+      const dis = ww === blocked ? "disabled" : "";
+      const checked = sel.has(ww) ? "checked" : "";
+      html += `
+        <label class="muted" title="Разгрузочный день ${DAY_NAMES[ww]}">
+          <input type="checkbox" data-w="${ww}" ${dis} ${checked}/> ${DAY_NAMES[ww]}
+        </label>`;
+    }
+    html += `</div>`;
+    return html;
+  }
+}
+// /src/usecases/CreateTask.js
+/**
+ * CreateTask — добавить предмет в расписание конкретного дня недели.
+ * Поток: load → mutate via Entities → save → ok
+ */
+import { genId, loadSchedule, saveSchedule } from "../storage/storage.js";
+import { Task } from "../entities/entities.js";
+
+/**
+ * @param {object} p
+ * @param {0|1|2|3|4|5|6} p.weekday
+ * @param {string} p.title
+ * @param {number} p.minutes
+ * @param {number[]} [p.unloadDays] // опционально
+ */
+export function CreateTask({ weekday, title, minutes, unloadDays = [] }) {
+  const schedule = loadSchedule();
+  const task = new Task({
+    id: genId(),
+    title,
+    minutes: Math.max(0, Math.floor(minutes || 0)),
+    progress: 0,
+    closed: false,
+    unloadDays: unloadDays,
+  });
+  schedule.add(weekday, task);
+  saveSchedule(schedule);
+  return { ok: true, id: task.id };
+}
+// /src/usecases/LoadDashboard.js
+/**
+ * LoadDashboard — собирает данные для экрана «Дашборд».
+ * - Всегда показываем D+1 от выбранной даты (пока просто от «сегодня»).
+ * - Метрики: нагрузка, выполнено, осталось, финиш (часы:минуты).
+ */
+import { composeDPlus1View } from "../storage/storage.js";
+import { minutesToHhmm } from "../utils/date.js";
+
+export function LoadDashboard(dPlus1) {
+  const { base, override } = composeDPlus1View(dPlus1);
+  const fact = override ? override.tasks : base;
+
+  const totalMinutes = fact.reduce((s, t) => s + (t.closed ? 0 : t.minutes), 0);
+  const doneMinutes  = fact.reduce((s, t) => {
+    if (t.closed) return s;
+    const pct = Math.max(0, Math.min(100, t.progress || 0));
+    return s + Math.round(t.minutes * pct / 100);
+  }, 0);
+  const leftMinutes  = Math.max(0, totalMinutes - doneMinutes);
+
+  return {
+    tasks: fact,
+    metrics: {
+      load:  minutesToHhmm(totalMinutes),
+      done:  minutesToHhmm(doneMinutes),
+      left:  minutesToHhmm(leftMinutes),
+      finish: minutesToHhmm(leftMinutes),
+    }
+  };
+}
+// /src/usecases/RenameTask.js
+/**
+ * RenameTask — переименование в Schedule или в DayTasks.
+ */
+import { loadSchedule, saveSchedule, ensureDay, saveDay } from "../storage/storage.js";
+
+/**
+ * @param {object} p
+ * @param {string} p.title
+ * @param {string} p.taskId
+ * @param {string} [p.date] ISO YYYY-MM-DD — если передан, правим в DayTasks
+ * @param {0|1|2|3|4|5|6} [p.weekday] — если date не передан, правим в Schedule
+ */
+export function RenameTask({ title, taskId, date, weekday }) {
+  if (date) {
+    const day = ensureDay(date);
+    day.rename(taskId, title);
+    saveDay(date, day);
+    return { ok: true, scope: "day" };
+  }
+  const schedule = loadSchedule();
+  schedule.rename(weekday, taskId, title);
+  saveSchedule(schedule);
+  return { ok: true, scope: "schedule" };
+}
+// /src/usecases/ResetDay.js
+/**
+ * ResetDay — очищает DayTasks указанной даты (пустой список).
+ */
+import { ensureDay, saveDay } from "../storage/storage.js";
+
+/**
+ * @param {object} p
+ * @param {string} p.date ISO YYYY-MM-DD
+ */
+export function ResetDay({ date }) {
+  const day = ensureDay(date);
+  day.clear();
+  saveDay(date, day);
+  return { ok: true };
+}
+// /src/usecases/SetMinutes.js
+/**
+ * SetMinutes — правка минут в Schedule или в DayTasks (D+1).
+ */
+import { ensureDay, loadSchedule, saveDay, saveSchedule } from "../storage/storage.js";
+
+/**
+ * @param {object} p
+ * @param {string} p.taskId
+ * @param {number} p.minutes
+ * @param {string} [p.date] ISO — если передан, правим DayTasks
+ * @param {0|1|2|3|4|5|6} [p.weekday] — если date не передан, правим Schedule
+ */
+export function SetMinutes({ taskId, minutes, date, weekday }) {
+  const m = Math.max(0, Math.floor(minutes || 0));
+  if (date) {
+    const day = ensureDay(date);
+    day.setMinutes(taskId, m);
+    saveDay(date, day);
+    return { ok: true, scope: "day" };
+  }
+  const schedule = loadSchedule();
+  schedule.setMinutes(weekday, taskId, m);
+  saveSchedule(schedule);
+  return { ok: true, scope: "schedule" };
+}
+// /src/usecases/SetProgress.js
+/**
+ * SetProgress — изменение прогресса задачи для конкретной даты (обычно D+1 или «разгрузка»).
+ * Всегда правим в DayTasks.
+ */
+import { ensureDay, saveDay } from "../storage/storage.js";
+import { clamp } from "../utils/date.js";
+
+/**
+ * @param {object} p
+ * @param {string} p.date ISO YYYY-MM-DD — какой день правим
+ * @param {string} p.taskId
+ * @param {number} [p.delta]  — относительное изменение (например +10/-10)
+ * @param {number} [p.value]  — абсолютное значение 0..100
+ */
+export function SetProgress({ date, taskId, delta, value }) {
+  const day = ensureDay(date);
+  const t = day.findTask(taskId);
+  if (!t) {
+    day.addTask({ id: taskId, title: "Задача", minutes: 0, progress: 0, closed: false, unloadDays: null });
+  }
+  const task = day.findTask(taskId);
+  const next = (typeof value === "number")
+    ? clamp(Math.floor(value), 0, 100)
+    : clamp(Math.floor((task?.progress || 0) + (delta || 0)), 0, 100);
+  day.setProgress(taskId, next);
+  saveDay(date, day);
+  return { ok: true, progress: next };
+}
+// /src/usecases/ToggleClosed.js
+/**
+ * ToggleClosed — переключение статуса закрытия (в DayTasks или Schedule).
+ */
+import { ensureDay, loadSchedule, saveDay, saveSchedule } from "../storage/storage.js";
+
+/**
+ * @param {object} p
+ * @param {string} p.taskId
+ * @param {string} [p.date] ISO — если передан, правим DayTasks
+ * @param {0|1|2|3|4|5|6} [p.weekday] — иначе правим Schedule
+ */
+export function ToggleClosed({ taskId, date, weekday }) {
+  if (date) {
+    const day = ensureDay(date);
+    day.toggleClosed(taskId);
+    saveDay(date, day);
+    return { ok: true, scope: "day" };
+  }
+  const schedule = loadSchedule();
+  const t = schedule.find(weekday, taskId);
+  if (t) t.toggleClosed();
+  saveSchedule(schedule);
+  return { ok: true, scope: "schedule" };
+}
+// /src/usecases/UpdateUnload.js
+/**
+ * UpdateUnload — изменение прогресса задачи «в разгрузке».
+ * Меняем прогресс в целевом дне (DayTasks targetDate).
+ */
+import { ensureDay, saveDay, loadSchedule } from "../storage/storage.js";
+import { clamp } from "../utils/date.js";
+
+/**
+ * @param {object} p
+ * @param {string} p.targetDate ISO — день, для которого идёт разгрузка
+ * @param {string} p.taskId
+ * @param {number} [p.delta]
+ * @param {number} [p.value]
+ * @param {0|1|2|3|4|5|6} [p.targetWeekday] — для проверки доступности разгрузки (опционально)
+ */
+export function UpdateUnload({ targetDate, taskId, delta, value, targetWeekday }) {
+  const day = ensureDay(targetDate);
+  const t = day.findTask(taskId);
+  if (!t) {
+    const sched = loadSchedule();
+    let title = "Задача";
+    for (let w=0; w<7; w++) {
+      const cand = sched.list(w).find(x => x.id === taskId);
+      if (cand) { title = cand.title; break; }
+    }
+    day.addTask({ id: taskId, title, minutes: 0, progress: 0, closed: false, unloadDays: null });
+  }
+  const task = day.findTask(taskId);
+  const next = (typeof value === "number")
+    ? clamp(Math.floor(value), 0, 100)
+    : clamp(Math.floor((task?.progress || 0) + (delta || 0)), 0, 100);
+  day.setProgress(taskId, next);
+  saveDay(targetDate, day);
+  return { ok: true, progress: next };
+}
+// /src/utils/date.js
+/**
+ * Утилиты работы с датами.
+ * - Используем локаль устройства автоматически.
+ * - Ключи дней — всегда ISO YYYY-MM-DD для предсказуемости.
+ */
+
+/** Возвращает объект Date на «сегодня» по локали устройства. */
+export function today() {
+  return new Date();
+}
+
+/** Возвращает Date для D+1 от переданной даты d (или от сегодня). */
+export function dPlus1(d = today()) {
+  const copy = new Date(d.getTime());
+  copy.setDate(copy.getDate() + 1);
+  return copy;
+}
+
+/** ISO-ключ дня YYYY-MM-DD. */
+export function toIsoDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** Номер дня недели 0..6 (вс = 0). Привязываемся к JS-стандарту. */
+export function weekday(d = today()) {
+  return d.getDay();
+}
+
+/** Преобразование минут в строку "часы:минуты", например 90 -> "1:30". */
+export function minutesToHhmm(mins) {
+  const h = Math.floor((mins || 0) / 60);
+  const m = (mins || 0) % 60;
+  return `${h}:${String(m).padStart(2, "0")}`;
+}
+
+/** Клэмп значения в диапазон [min, max]. */
+export function clamp(v, min, max) {
+  return Math.max(min, Math.min(max, v));
+}
