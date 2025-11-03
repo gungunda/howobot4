@@ -1,7 +1,7 @@
 /**
  * ToggleClosed — переключение статуса закрытия (в DayTasks или Schedule).
  */
-import { ensureDayTaskFromSchedule, loadSchedule, saveDay, saveSchedule } from "../storage/storage.js";
+import { ensureDayTask, loadSchedule, saveDay, saveSchedule } from "../storage/storage.js";
 
 /**
  * @param {object} p
@@ -11,7 +11,7 @@ import { ensureDayTaskFromSchedule, loadSchedule, saveDay, saveSchedule } from "
  */
 export function ToggleClosed({ taskId, date, weekday }) {
   if (date) {
-    const day = ensureDayTaskFromSchedule(date, taskId);
+    const day = ensureDayTask(date, taskId);
     day.toggleClosed(taskId);
     saveDay(date, day);
     return { ok: true, scope: "day" };

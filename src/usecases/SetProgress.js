@@ -2,7 +2,7 @@
  * SetProgress — изменение прогресса задачи для конкретной даты (обычно D+1).
  * Всегда правим в DayTasks.
  */
-import { ensureDayTaskFromSchedule, saveDay } from "../storage/storage.js";
+import { ensureDayTask, saveDay } from "../storage/storage.js";
 import { clamp } from "../utils/date.js";
 
 /**
@@ -13,7 +13,7 @@ import { clamp } from "../utils/date.js";
  * @param {number} [p.value]  — абсолютное значение 0..100
  */
 export function SetProgress({ date, taskId, delta, value }) {
-  const day = ensureDayTaskFromSchedule(date, taskId);
+  const day = ensureDayTask(date, taskId);
   const t = day.findTask(taskId);
   const next = (typeof value === "number")
     ? clamp(Math.floor(value), 0, 100)

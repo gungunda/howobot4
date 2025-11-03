@@ -1,7 +1,7 @@
 /**
  * SetMinutes — правка минут в Schedule или в DayTasks (D+1).
  */
-import { ensureDayTaskFromSchedule, loadSchedule, saveDay, saveSchedule } from "../storage/storage.js";
+import { ensureDayTask, loadSchedule, saveDay, saveSchedule } from "../storage/storage.js";
 
 /**
  * @param {object} p
@@ -13,7 +13,7 @@ import { ensureDayTaskFromSchedule, loadSchedule, saveDay, saveSchedule } from "
 export function SetMinutes({ taskId, minutes, date, weekday }) {
   const m = Math.max(0, Math.floor(minutes || 0));
   if (date) {
-    const day = ensureDayTaskFromSchedule(date, taskId);
+    const day = ensureDayTask(date, taskId);
     day.setMinutes(taskId, m);
     saveDay(date, day);
     return { ok: true, scope: "day" };

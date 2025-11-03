@@ -61,7 +61,7 @@ export class DashboardPresenter {
   /** Изменение прогресса основной задачи ±10%. */
   onStep(taskId, sign){
     const d1 = date.dPlus1(this.baseDate);
-    const d = date.addDays(d1, -1);                  // D = (D+1) - 1
+    const d = this.baseDate;                  // D = (D+1) - 1
     SetProgress({ date: date.toIsoDate(d), taskId, delta: sign * config.progressStep });
     this.refresh();
   }
@@ -69,7 +69,7 @@ export class DashboardPresenter {
   /** Изменение прогресса основной задачи ползунком. */
   onSlide(taskId, value){
     const d1 = date.dPlus1(this.baseDate);
-    const d = date.addDays(d1, -1);                  // D = (D+1) - 1
+    const d = this.baseDate;                  // D = (D+1) - 1
     SetProgress({ date: date.toIsoDate(d), taskId, value: Number(value) });
     this.refresh();
   }
@@ -77,7 +77,7 @@ export class DashboardPresenter {
   /** Переключение статуса закрытости основной задачи. */
   onToggle(taskId){
     const d1 = date.dPlus1(this.baseDate);
-    const d = date.addDays(d1, -1);                  // D = (D+1) - 1
+    const d = this.baseDate;                  // D = (D+1) - 1
     ToggleClosed({ taskId, date: date.toIsoDate(d) });
     this.refresh();
   }
@@ -85,7 +85,7 @@ export class DashboardPresenter {
   /** Установка минут основной задачи. */
   onSetMinutes(taskId, minutes){
     const d1 = date.dPlus1(this.baseDate);
-    const d = date.addDays(d1, -1);                  // D = (D+1) - 1
+    const d = this.baseDate;                  // D = (D+1) - 1
     SetMinutes({ taskId, minutes: Number(minutes), date: date.toIsoDate(d) });
     this.refresh();
   }
@@ -93,7 +93,7 @@ export class DashboardPresenter {
   /** Очистка оверрайда текущего дня (DayTasks(D)). */
   onResetDay(){
     const d1 = date.dPlus1(this.baseDate);
-    const d = date.addDays(d1, -1);                  // D = (D+1) - 1
+    const d = this.baseDate;                  // D = (D+1) - 1
     ResetDay({ date: date.toIsoDate(d) });
     this.refresh();
   }

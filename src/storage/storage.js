@@ -115,7 +115,7 @@ export function findScheduledTaskForDate(dateIso, taskId){
  * Убедиться, что в оверрайде дня D есть запись по taskId;
  * если нет — подтянуть копию из расписания R = D+1 (с правильными title/minutes).
  */
-export function ensureDayTaskFromSchedule(dateIso, taskId){
+export function ensureDayTask(dateIso, taskId){
   const day = ensureDay(dateIso);
   const found = day.findTask(taskId);
   if (found) return day;
