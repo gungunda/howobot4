@@ -3,17 +3,18 @@ import { minutesToHhmm } from "../../../utils/date.js";
 const DAY_NAMES = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
 
 export class ScheduleView {
-  constructor(mount, handlers) {
-    this.mount = mount;
+  constructor(els, handlers){
+    this.els = els;
     this.h = handlers;
   }
-  render() {
-    this.mount.innerHTML = "";
+  render(){
+    const root = this.els.weekRoot;
+    root.innerHTML = "";
     for (let w = 0; w < 7; w++) {
-      this.mount.appendChild(this.renderDayBlock(w));
+      root.appendChild(this.renderDayBlock(w));
     }
   }
-  renderDayBlock(w) {
+  renderDayBlock(w){
     const wrap = document.createElement("div");
     wrap.className = "card";
     const head = document.createElement("div");
@@ -42,11 +43,9 @@ export class ScheduleView {
     wrap.appendChild(form);
     return wrap;
   }
-  renderTaskRow(w, t) {
+  renderTaskRow(w, t){
     const row = document.createElement("div");
     row.className = "row";
-    row.style.marginTop = "6px";
-    row.style.justifyContent = "space-between";
     row.innerHTML = `
       <div class="row">
         <input class="input" value="${t.title}" style="min-width:200px" />
@@ -73,7 +72,7 @@ export class ScheduleView {
     });
     return row;
   }
-  renderUnloadControls(w, t) {
+  renderUnloadControls(w, t){
     const blocked = ((w + 6) % 7);
     const sel = new Set(t.unloadDays || []);
     let html = `<div class="row">`;
@@ -89,3 +88,5 @@ export class ScheduleView {
     return html;
   }
 }
+
+

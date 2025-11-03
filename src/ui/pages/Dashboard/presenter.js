@@ -8,14 +8,27 @@ import { DashboardView } from "./view.js";
 import { config } from "../../../config.js";
 
 export class DashboardPresenter {
-  constructor(mount) {
-    this.mount = mount;
+  constructor(sectionRoot){
+    this.root = sectionRoot;
     this.baseDate = date.today();
   }
-  render() {
+  render(){
     const d1 = date.dPlus1(this.baseDate);
     const vm = LoadDashboard(d1);
-    this.view = new DashboardView(this.mount, {
+    const els = {
+      dateEl: this.root.querySelector('[data-dashboard-date]'),
+      stats: {
+        planned: this.root.querySelector('[data-dashboard-stat="planned"]'),
+        done:    this.root.querySelector('[data-dashboard-stat="done"]'),
+        left:    this.root.querySelector('[data-dashboard-stat="left"]'),
+        eta:     this.root.querySelector('[data-dashboard-stat="eta"]'),
+      },
+      list: this.root.querySelector('[data-dashboard-tasks]'),
+      offloadWrap: this.root.querySelector('[data-dashboard-offload-wrapper]'),
+      offloadList: this.root.querySelector('[data-dashboard-offload]'),
+      resetBtn: this.root.querySelector('[data-action="reset-day"]'),
+    };
+    this.view = new DashboardView(els, {
       dateIso: date.toIsoDate(d1),
       vm,
       onStep: (taskId, sign) => this.onStep(taskId, sign),
@@ -26,30 +39,32 @@ export class DashboardPresenter {
     });
     this.view.render();
   }
-  refresh() { this.render(); }
-  onStep(taskId, sign) {
+  refresh(){ this.render(); }
+  onStep(taskId, sign){
     const d1 = date.dPlus1(this.baseDate);
     SetProgress({ date: date.toIsoDate(d1), taskId, delta: sign * config.progressStep });
     this.refresh();
   }
-  onSlide(taskId, value) {
+  onSlide(taskId, value){
     const d1 = date.dPlus1(this.baseDate);
     SetProgress({ date: date.toIsoDate(d1), taskId, value: Number(value) });
     this.refresh();
   }
-  onToggle(taskId) {
+  onToggle(taskId){
     const d1 = date.dPlus1(this.baseDate);
     ToggleClosed({ taskId, date: date.toIsoDate(d1) });
     this.refresh();
   }
-  onSetMinutes(taskId, minutes) {
+  onSetMinutes(taskId, minutes){
     const d1 = date.dPlus1(this.baseDate);
     SetMinutes({ taskId, minutes: Number(minutes), date: date.toIsoDate(d1) });
     this.refresh();
   }
-  onResetDay() {
+  onResetDay(){
     const d1 = date.dPlus1(this.baseDate);
     ResetDay({ date: date.toIsoDate(d1) });
     this.refresh();
   }
 }
+
+

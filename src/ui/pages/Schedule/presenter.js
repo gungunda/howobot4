@@ -3,12 +3,15 @@ import { ScheduleView } from "./view.js";
 import { Task } from "../../../entities/entities.js";
 
 export class SchedulePresenter {
-  constructor(mount) {
-    this.mount = mount;
+  constructor(sectionRoot){
+    this.root = sectionRoot;
   }
-  render() {
+  render(){
     this.schedule = loadSchedule();
-    this.view = new ScheduleView(this.mount, {
+    const els = {
+      weekRoot: this.root.querySelector('[data-schedule-week]'),
+    };
+    this.view = new ScheduleView(els, {
       schedule: this.schedule,
       onAdd: (weekday, title, minutes) => this.onAdd(weekday, title, minutes),
       onSetMinutes: (weekday, taskId, minutes) => this.onSetMinutes(weekday, taskId, minutes),
@@ -18,24 +21,24 @@ export class SchedulePresenter {
     });
     this.view.render();
   }
-  refresh() { this.render(); }
-  onAdd(weekday, title, minutes) {
+  refresh(){ this.render(); }
+  onAdd(weekday, title, minutes){
     const task = new Task({ id: genId(), title, minutes: Number(minutes)||0, progress: 0, closed: false, unloadDays: [] });
     this.schedule.add(weekday, task);
     saveSchedule(this.schedule);
     this.refresh();
   }
-  onSetMinutes(weekday, taskId, minutes) {
+  onSetMinutes(weekday, taskId, minutes){
     this.schedule.setMinutes(weekday, taskId, Number(minutes)||0);
     saveSchedule(this.schedule);
     this.refresh();
   }
-  onRename(weekday, taskId, title) {
+  onRename(weekday, taskId, title){
     this.schedule.rename(weekday, taskId, title);
     saveSchedule(this.schedule);
     this.refresh();
   }
-  onToggleUnload(weekday, taskId, w) {
+  onToggleUnload(weekday, taskId, w){
     const t = this.schedule.find(weekday, taskId);
     if (!t) return;
     const blocked = ((weekday + 6) % 7);
@@ -46,9 +49,11 @@ export class SchedulePresenter {
     saveSchedule(this.schedule);
     this.refresh();
   }
-  onRemove(weekday, taskId) {
+  onRemove(weekday, taskId){
     this.schedule.remove(weekday, taskId);
     saveSchedule(this.schedule);
     this.refresh();
   }
 }
+
+

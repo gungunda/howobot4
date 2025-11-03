@@ -1,51 +1,61 @@
 /**
- * Точка входа приложения.
- * - Роутинг между 3 экранами.
- * - Инициализация локали времени (берём с устройства).
- * - Периодическая чистка старых day_*.
- * - Навигация без библиотек.
+ * Точка входа. Навигация по data-* и инициализация presenters.
  */
 import { config } from "./config.js";
 import * as date from "./utils/date.js";
 import { cleanupOldDays, initStorage } from "./storage/storage.js";
-import { renderAppNav } from "./ui/appView.js";
 import { DashboardPresenter } from "./ui/pages/Dashboard/presenter.js";
 import { SchedulePresenter } from "./ui/pages/Schedule/presenter.js";
 import { CalendarPresenter } from "./ui/pages/Calendar/presenter.js";
 
-const root = document.getElementById("app-root");
-const navMount = document.getElementById("app-nav");
-
-/** Простая «навигация» на кнопках */
-const routes = {
-  dashboard: () => new DashboardPresenter(root),
-  schedule:  () => new SchedulePresenter(root),
-  calendar:  () => new CalendarPresenter(root),
+const views = {
+  dashboard: document.querySelector('[data-view="dashboard"]'),
+  schedule:  document.querySelector('[data-view="schedule"]'),
+  calendar:  document.querySelector('[data-view="calendar"]'),
 };
 
-function mount(route) {
-  root.innerHTML = "";
-  const make = routes[route] || routes.dashboard;
-  const p = make();
-  p.render();
-  highlight(route);
+function show(route){
+  Object.values(views).forEach(el => el.classList.remove("is-active"));
+  (views[route] || views.dashboard).classList.add("is-active");
+  render(route);
 }
 
-function highlight(route) {
-  [...navMount.querySelectorAll("button")].forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.route === route);
-  });
-}
+document.querySelectorAll('[data-nav]').forEach(btn => {
+  btn.addEventListener('click', () => show(btn.dataset.nav));
+});
 
-// Рендерим навигацию
-renderAppNav(navMount, (route) => mount(route));
-
-// Инициализация стораджа
 initStorage();
 cleanupOldDays(config.daysToKeep);
 
-// Первая загрузка — dashboard
-mount("dashboard");
+const dashboard = new DashboardPresenter(views.dashboard);
+const schedule  = new SchedulePresenter(views.schedule);
+const calendar  = new CalendarPresenter(views.calendar, {
+  onSelectDate: (iso) => {
+    dashboard.baseDate = new Date(iso);
+    show("dashboard");
+    dashboard.render();
+  }
+});
 
-// Делаем утилиты дат доступными для консоли (удобно ребёнку смотреть)
+document.querySelector('[data-action="today"]')?.addEventListener('click', () => {
+  const t = date.today();
+  dashboard.baseDate = t;
+  schedule.baseDate = t;
+  calendar.baseDate = t;
+  render(currentRoute);
+});
+
+let currentRoute = "dashboard";
+function render(route){
+  currentRoute = route || currentRoute;
+  switch(currentRoute){
+    case "schedule":  schedule.render(); break;
+    case "calendar":  calendar.render(); break;
+    default:          dashboard.render(); break;
+  }
+}
+
+show("dashboard");
 window.__planner = { date };
+
+
