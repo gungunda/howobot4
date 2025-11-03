@@ -1,6 +1,7 @@
 import { minutesToHhmm } from "../../../utils/date.js";
 
-const DAY_NAMES = ["Вс","Пн","Вт","Ср","Чт","Пт","Сб"];
+// Переходим на русскую нумерацию: 0=Пн ... 6=Вс
+const DAY_NAMES = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 
 export class ScheduleView {
   constructor(els, handlers){
@@ -73,6 +74,7 @@ export class ScheduleView {
     return row;
   }
   renderUnloadControls(w, t){
+    // Блокируем предыдущий день в русской нумерации (Пн=0..Вс=6): prev = (w+6)%7
     const blocked = ((w + 6) % 7);
     const sel = new Set(t.unloadDays || []);
     let html = `<div class="row">`;
@@ -88,5 +90,4 @@ export class ScheduleView {
     return html;
   }
 }
-
 

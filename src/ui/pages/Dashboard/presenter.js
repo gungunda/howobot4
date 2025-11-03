@@ -36,10 +36,14 @@ export class DashboardPresenter {
       onToggle: (taskId) => this.onToggle(taskId),
       onSetMinutes: (taskId, minutes) => this.onSetMinutes(taskId, minutes),
       onResetDay: () => this.onResetDay(),
+      // оффлоад
+      onOffloadStep: (taskId, targetIso, sign) => this.onOffloadStep(taskId, targetIso, sign),
+      onOffloadSlide: (taskId, targetIso, value) => this.onOffloadSlide(taskId, targetIso, value),
     });
     this.view.render();
   }
   refresh(){ this.render(); }
+  // Основные
   onStep(taskId, sign){
     const d1 = date.dPlus1(this.baseDate);
     SetProgress({ date: date.toIsoDate(d1), taskId, delta: sign * config.progressStep });
@@ -63,6 +67,15 @@ export class DashboardPresenter {
   onResetDay(){
     const d1 = date.dPlus1(this.baseDate);
     ResetDay({ date: date.toIsoDate(d1) });
+    this.refresh();
+  }
+  // Оффлоад — пишем в DayTasks(targetIso)
+  onOffloadStep(taskId, targetIso, sign){
+    SetProgress({ date: targetIso, taskId, delta: sign * config.progressStep });
+    this.refresh();
+  }
+  onOffloadSlide(taskId, targetIso, value){
+    SetProgress({ date: targetIso, taskId, value: Number(value) });
     this.refresh();
   }
 }

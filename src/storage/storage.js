@@ -2,11 +2,11 @@
  * Единое хранилище поверх localStorage.
  * Ключи:
  *  - schedule_v1         — недельный шаблон (весь целиком)
- *  - day_YYYY-MM-DD      — оверрайд конкретного дня
+ *  - day_YYYY-MM-DD      — оверрайд конкретного дня (DayTasks)
  * ВАЖНО: отдельных task_${id} нет. Задачи живут только внутри schedule/day.
  */
 import { DayTasks, Schedule, Task } from "../entities/entities.js";
-import { toIsoDate } from "../utils/date.js";
+import { toIsoDate, weekdayRu, addDays } from "../utils/date.js";
 
 const KEY_SCHEDULE = "schedule_v1";
 
@@ -18,7 +18,7 @@ export function initStorage() {
   }
 }
 
-/** Простой генератор id: время + короткий суффикс. */
+/** Простой генератор id */
 export function genId() {
   const suf = Math.random().toString(36).slice(2, 6);
   return `${Date.now().toString(36)}${suf}`;
@@ -26,7 +26,6 @@ export function genId() {
 
 /** Сохранить недельное расписание. */
 export function saveSchedule(schedule) {
-  // сериализуем без методов: plain JSON
   const plain = { 0:[],1:[],2:[],3:[],4:[],5:[],6:[] };
   for (const d of Object.keys(plain)) {
     plain[d] = (schedule.byDay[d] || []).map(t => ({
@@ -41,26 +40,24 @@ export function saveSchedule(schedule) {
 export function loadSchedule() {
   const raw = localStorage.getItem(KEY_SCHEDULE);
   if (!raw) return new Schedule();
-  try {
-    const obj = JSON.parse(raw);
-    return new Schedule(obj);
-  } catch {
-    return new Schedule();
-  }
+  try { return new Schedule(JSON.parse(raw)); } catch { return new Schedule(); }
 }
 
 /** Ключ day_* по ISO дате. */
-function dayKey(dateIso) {
-  return `day_${dateIso}`;
-}
+function dayKey(dateIso) { return `day_${dateIso}`; }
 
-/** Сохранить DayTasks (обнуляем unloadDays у всех задач). */
+/** Сохранить DayTasks. */
 export function saveDay(dateIso, day) {
   const iso = toIsoDate(new Date(dateIso));
   const plain = {
     date: iso,
     tasks: day.tasks.map(t => ({
-      id: t.id, title: t.title, minutes: t.minutes, progress: t.progress, closed: t.closed, unloadDays: null
+      id: t.id,
+      title: t.title,
+      minutes: t.minutes,
+      progress: t.progress,
+      closed: t.closed,
+      unloadDays: null
     }))
   };
   localStorage.setItem(dayKey(iso), JSON.stringify(plain));
@@ -74,9 +71,7 @@ export function loadDay(dateIso) {
   try {
     const obj = JSON.parse(raw);
     return new DayTasks(obj.date, obj.tasks);
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 /** Убедиться, что DayTasks существует (иначе создать пустой). */
@@ -104,15 +99,66 @@ export function cleanupOldDays(daysToKeep) {
 }
 
 /**
- * Композиция D+1 для отображения:
- * - base: задачи из расписания на нужный weekday
- * - override: DayTasks (если есть)
+ * Найти задачу из расписания для календарной даты D, где
+ * R = D+1 — родной день в расписании (Mon=0).
+ */
+export function findScheduledTaskForDate(dateIso, taskId){
+  const schedule = loadSchedule();
+  const d = new Date(dateIso);
+  const rDate = addDays(d, 1);
+  const r = weekdayRu(rDate); // Пн=0
+  const t = schedule.find(r, taskId);
+  return t ? new Task(t) : null;
+}
+
+/**
+ * Убедиться, что в оверрайде дня D есть запись по taskId;
+ * если нет — подтянуть копию из расписания R = D+1 (с правильными title/minutes).
+ */
+export function ensureDayTaskFromSchedule(dateIso, taskId){
+  const day = ensureDay(dateIso);
+  const found = day.findTask(taskId);
+  if (found) return day;
+  const base = findScheduledTaskForDate(dateIso, taskId);
+  if (base) {
+    day.addTask(base);
+    return day;
+  }
+  // fallback (не должно срабатывать при корректных данных расписания)
+  day.addTask({ id: taskId, title: "Задача", minutes: 0, progress: 0, closed: false, unloadDays: null });
+  return day;
+}
+
+/**
+ * Композиция для экрана D+1:
+ *  - base: задачи из расписания для weekdayRu(D+1)
+ *  - override: DayTasks(D) как патчи по id (minutes/progress/closed; title правится отдельным usecase)
+ * Возвращает { dateIso (D+1 ISO), tasks: Task[] } — уже после слияния.
  */
 export function composeDPlus1View(dPlus1) {
   const dateIso = toIsoDate(dPlus1);
-  const weekday = dPlus1.getDay();
+  const w = weekdayRu(dPlus1); // Mon=0..Sun=6 — это родной день
   const schedule = loadSchedule();
-  const base = schedule.list(weekday).map(t => new Task(t));
-  const override = loadDay(dateIso);
-  return { base, override };
+  const base = schedule.list(w).map(t => new Task(t));
+  const override = loadDay(toIsoDate(addDays(dPlus1, -1))); // DayTasks(D) где D = (D+1)-1
+
+  if (!override) {
+    return { dateIso, tasks: base };
+  }
+
+  const map = new Map(base.map(t => [t.id, t]));
+  for (const o of override.tasks) {
+    const b = map.get(o.id);
+    if (b) {
+      b.minutes = o.minutes;
+      b.progress = o.progress;
+      b.closed = o.closed;
+      // title не трогаем — он из расписания; rename — отдельный usecase
+    } else {
+      // Задача есть в override(D), но отсутствует в schedule(w) — добавим как есть (редкий случай)
+      map.set(o.id, new Task({ id:o.id, title:o.title, minutes:o.minutes, progress:o.progress, closed:o.closed, unloadDays:null }));
+    }
+  }
+  return { dateIso, tasks: Array.from(map.values()) };
 }
+

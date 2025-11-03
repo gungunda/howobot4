@@ -1,19 +1,19 @@
 /**
  * SetMinutes — правка минут в Schedule или в DayTasks (D+1).
  */
-import { ensureDay, loadSchedule, saveDay, saveSchedule } from "../storage/storage.js";
+import { ensureDayTaskFromSchedule, loadSchedule, saveDay, saveSchedule } from "../storage/storage.js";
 
 /**
  * @param {object} p
  * @param {string} p.taskId
  * @param {number} p.minutes
  * @param {string} [p.date] ISO — если передан, правим DayTasks
- * @param {0|1|2|3|4|5|6} [p.weekday] — если date не передан, правим Schedule
+ * @param {0|1|2|3|4|5|6} [p.weekday] — если date не передан, правим Schedule (Пн=0..Вс=6)
  */
 export function SetMinutes({ taskId, minutes, date, weekday }) {
   const m = Math.max(0, Math.floor(minutes || 0));
   if (date) {
-    const day = ensureDay(date);
+    const day = ensureDayTaskFromSchedule(date, taskId);
     day.setMinutes(taskId, m);
     saveDay(date, day);
     return { ok: true, scope: "day" };
@@ -23,3 +23,5 @@ export function SetMinutes({ taskId, minutes, date, weekday }) {
   saveSchedule(schedule);
   return { ok: true, scope: "schedule" };
 }
+
+

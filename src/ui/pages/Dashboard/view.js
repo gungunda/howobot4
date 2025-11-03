@@ -1,5 +1,7 @@
 import { minutesToHhmm } from "../../../utils/date.js";
 
+const DAY_NAMES = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+
 export class DashboardView{
   constructor(els, handlers){
     this.els = els;
@@ -19,15 +21,18 @@ export class DashboardView{
       this.els.resetBtn.onclick = () => this.h.onResetDay();
     }
 
-    // Список задач
+    // Список задач дня
     this.els.list.innerHTML = "";
     vm.tasks.forEach(t => this.els.list.appendChild(this.renderTaskCard(t)));
 
-    // Разгрузка — пока просто скрыта (каркас на будущее)
+    // Разгрузка
     if (this.els.offloadWrap){
-      const hasOffload = false; // заглушка на будущее
+      const hasOffload = (vm.offload && vm.offload.length > 0);
       this.els.offloadWrap.hidden = !hasOffload;
       this.els.offloadList.innerHTML = "";
+      if (hasOffload){
+        vm.offload.forEach(o => this.els.offloadList.appendChild(this.renderOffloadCard(o)));
+      }
     }
   }
 
@@ -64,6 +69,28 @@ export class DashboardView{
     });
     return card;
   }
-}
 
+  renderOffloadCard(o){
+    const card = document.createElement("div");
+    card.className = "card";
+    const hhmm = minutesToHhmm(o.minutes);
+    card.innerHTML = `
+      <div class="row">
+        <strong>${o.title}</strong>
+        <span class="muted">${hhmm}</span>
+        <span class="muted">из дня: ${DAY_NAMES[o.fromWeekday]}</span>
+      </div>
+      <div class="row">
+        <button class="btn" data-step="-1">−10%</button>
+        <input class="range" type="range" min="0" max="100" step="10" value="${o.progress}">
+        <button class="btn" data-step="+1">+10%</button>
+        <span>${o.progress}%</span>
+      </div>
+    `;
+    card.querySelector('[data-step="-1"]').addEventListener("click", () => this.h.onOffloadStep(o.id, o.targetIso, -1));
+    card.querySelector('[data-step="+1"]').addEventListener("click", () => this.h.onOffloadStep(o.id, o.targetIso, +1));
+    card.querySelector('.range').addEventListener("input", (e) => this.h.onOffloadSlide(o.id, o.targetIso, e.target.value));
+    return card;
+  }
+}
 
