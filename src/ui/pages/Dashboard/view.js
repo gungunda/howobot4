@@ -1,15 +1,31 @@
+/** 
+ * DashboardView — отображение дашборда.
+ * Модалка и кнопка "+" создаются динамически (index.html править не нужно).
+ */
 import { minutesToHhmm } from "../../../utils/date.js";
+import { ensureModalRoot, openModal } from "../../components/modal.js";
 
 const DAY_NAMES = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 
 export class DashboardView{
+  /**
+   * @param {object} els - ссылки на элементы DOM
+   * @param {object} handlers - колбэки презентера
+   */
   constructor(els, handlers){
+    /** @type {any} */
     this.els = els;
+    /** @type {any} */
     this.h = handlers;
+
+    // Готовим модалку (если нет в DOM — создадим)
+    ensureModalRoot();
   }
+
+  /** Отрисовать дашборд. */
   render(){
     const { dateIso, vm } = this.h;
-    // Шапка/статы
+
     if (this.els.dateEl) this.els.dateEl.textContent = `(${dateIso})`;
     this.els.stats.planned.textContent = vm.metrics.load;
     this.els.stats.done.textContent    = vm.metrics.done;
@@ -25,6 +41,9 @@ export class DashboardView{
     this.els.list.innerHTML = "";
     vm.tasks.forEach(t => this.els.list.appendChild(this.renderTaskCard(t)));
 
+    // Кнопка «+» — добавляется сразу под списком задач (динамически)
+    this.injectAddButton();
+
     // Разгрузка
     if (this.els.offloadWrap){
       const hasOffload = (vm.offload && vm.offload.length > 0);
@@ -36,6 +55,83 @@ export class DashboardView{
     }
   }
 
+  /** Вставить кнопку «+» под списком задач. */
+  injectAddButton(){
+    // Удалим прежнюю кнопку, если была
+    const prev = this.els.list.parentElement.querySelector(".dashboard-add");
+    if (prev) prev.remove();
+
+    const btn = document.createElement("button");
+    btn.className = "btn primary dashboard-add";
+    btn.textContent = "+";
+    btn.addEventListener("click", () => this.openAddForm());
+
+    // Вставляем сразу после списка
+    this.els.list.parentElement.appendChild(btn);
+  }
+
+  /**
+   * Открыть модалку для добавления новой задачи в сегодня.
+   */
+  openAddForm(){
+    const node = document.createElement("div");
+    node.innerHTML = `
+      <h3>Новая задача</h3>
+      <div class="form-row">
+        <label>Название</label>
+        <input type="text" data-f-title placeholder="Введите название">
+      </div>
+      <div class="form-row">
+        <label>Минуты</label>
+        <input type="number" min="0" step="5" data-f-min value="0">
+      </div>
+      <div class="form-actions">
+        <button class="btn ghost" data-cancel>Отмена</button>
+        <button class="btn primary" data-save>Сохранить</button>
+      </div>
+    `;
+    openModal(node, {
+      onSave: () => {
+        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+        if (!title) return; // простая валидация
+        this.h.onAddSave(title, minutes);
+      }
+    });
+  }
+
+  /**
+   * Открыть модалку для редактирования существующей задачи.
+   * @param {object} t - задача (id,title,minutes,progress,...)
+   */
+  openEditForm(t){
+    const node = document.createElement("div");
+    node.innerHTML = `
+      <h3>Правка задачи</h3>
+      <div class="form-row">
+        <label>Название</label>
+        <input type="text" data-f-title value="${t.title}">
+      </div>
+      <div class="form-row">
+        <label>Минуты</label>
+        <input type="number" min="0" step="5" data-f-min value="${t.minutes}">
+      </div>
+      <div class="form-actions">
+        <button class="btn ghost" data-cancel>Отмена</button>
+        <button class="btn primary" data-save>Сохранить</button>
+      </div>
+    `;
+    openModal(node, {
+      onSave: () => {
+        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+        if (!title) return;
+        this.h.onEditSave(t.id, title, minutes);
+      }
+    });
+  }
+
+  /** Карточка основной задачи. */
   renderTaskCard(t){
     const card = document.createElement("div");
     card.className = "card";
@@ -51,6 +147,7 @@ export class DashboardView{
         <button class="btn" data-step="+1">+10%</button>
         <span>${t.progress}%</span>
         <button class="btn" data-action="toggle">${t.closed ? "Открыть" : "Закрыть"}</button>
+        <button class="btn" data-action="edit">Править</button>
       </div>
       <div class="row">
         <label>Минуты:
@@ -67,9 +164,11 @@ export class DashboardView{
       const val = Number(card.querySelector('input[type="number"]').value);
       this.h.onSetMinutes(t.id, val);
     });
+    card.querySelector('[data-action="edit"]').addEventListener("click", () => this.openEditForm(t));
     return card;
   }
 
+  /** Карточка разгрузки. */
   renderOffloadCard(o){
     const card = document.createElement("div");
     card.className = "card";
@@ -93,4 +192,7 @@ export class DashboardView{
     return card;
   }
 }
+
+
+
 

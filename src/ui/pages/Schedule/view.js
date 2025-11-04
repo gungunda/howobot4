@@ -1,93 +1,192 @@
+/**
+ * ScheduleView — экран «Расписание».
+ * Правка/добавление предметов через модалки. Разгрузка редактируется только в модалке.
+ * В карточках предметов разгрузка показывается текстом, без чекбоксов.
+ */
 import { minutesToHhmm } from "../../../utils/date.js";
+import { ensureModalRoot, openModal } from "../../components/modal.js";
 
-// Переходим на русскую нумерацию: 0=Пн ... 6=Вс
-const DAY_NAMES = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+const DAY = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 
 export class ScheduleView {
-  constructor(els, handlers){
-    this.els = els;
-    this.h = handlers;
+  /**
+   * @param {object} els
+   * @param {object} h  — обработчики презентера
+   */
+  constructor(els, h){
+    this.els = els || {};
+    this.h = h;
+    ensureModalRoot();
   }
+
+  /** Полная отрисовка недельного расписания. */
   render(){
     const root = this.els.weekRoot;
     root.innerHTML = "";
-    for (let w = 0; w < 7; w++) {
-      root.appendChild(this.renderDayBlock(w));
+    for (let w = 0; w < 7; w++){
+      root.appendChild(this.renderDay(w));
     }
   }
-  renderDayBlock(w){
+
+  /** Один день расписания. */
+  renderDay(w){
     const wrap = document.createElement("div");
     wrap.className = "card";
+
     const head = document.createElement("div");
     head.className = "row";
-    head.innerHTML = `<strong>${DAY_NAMES[w]}</strong>`;
+    head.innerHTML = `<strong>${DAY[w]}</strong>`;
+
+    const addBtn = document.createElement("button");
+    addBtn.className = "btn";
+    addBtn.textContent = "+";
+    addBtn.title = "Добавить предмет";
+    addBtn.addEventListener("click", () => this.openAddForm(w));
+    head.appendChild(addBtn);
+
     wrap.appendChild(head);
 
     const list = document.createElement("div");
     (this.h.schedule.list(w) || []).forEach(t => list.appendChild(this.renderTaskRow(w, t)));
     wrap.appendChild(list);
 
-    const form = document.createElement("div");
-    form.className = "row";
-    form.innerHTML = `
-      <input class="input" placeholder="Название" />
-      <input class="input" type="number" min="0" step="5" placeholder="Минуты" />
-      <button class="btn">Добавить</button>
-    `;
-    const [title, minutes, btn] = form.querySelectorAll("input,button");
-    btn.addEventListener("click", () => {
-      const t = String(title.value || "").trim();
-      const m = Number(minutes.value) || 0;
-      if (!t) return;
-      this.h.onAdd(w, t, m);
-    });
-    wrap.appendChild(form);
     return wrap;
   }
+
+  /** Строка предмета (без чекбоксов и без кнопки удаления). */
   renderTaskRow(w, t){
     const row = document.createElement("div");
     row.className = "row";
+
+    const hhmm = minutesToHhmm(t.minutes);
+    const unloadTxt = this.formatUnload(t.unloadDays);
+
     row.innerHTML = `
       <div class="row">
-        <input class="input" value="${t.title}" style="min-width:200px" />
-        <input class="input" type="number" min="0" step="5" value="${t.minutes}" style="width:90px" />
-        <span class="muted">${minutesToHhmm(t.minutes)}</span>
+        <strong>${t.title}</strong>
+        <span class="muted">${hhmm}</span>
       </div>
       <div class="row">
-        ${this.renderUnloadControls(w, t)}
-        <button class="btn" data-act="save">Сохранить</button>
-        <button class="btn btn-danger" data-act="remove">Удалить</button>
+        <span class="muted">Разгрузка: ${unloadTxt}</span>
+        <button class="btn" data-act="edit">Править</button>
       </div>
     `;
-    const [title, minutes] = row.querySelectorAll('input.input');
-    row.querySelector('[data-act="save"]').addEventListener("click", () => {
-      this.h.onRename(w, t.id, title.value);
-      this.h.onSetMinutes(w, t.id, Number(minutes.value)||0);
-    });
-    row.querySelector('[data-act="remove"]').addEventListener("click", () => this.h.onRemove(w, t.id));
-    row.querySelectorAll('input[type="checkbox"][data-w]').forEach(ch => {
-      ch.addEventListener("change", () => {
-        const ww = Number(ch.dataset.w);
-        this.h.onToggleUnload(w, t.id, ww);
-      });
-    });
+
+    row.querySelector('[data-act="edit"]').addEventListener("click", () => this.openEditForm(w, t));
     return row;
   }
-  renderUnloadControls(w, t){
-    // Блокируем предыдущий день в русской нумерации (Пн=0..Вс=6): prev = (w+6)%7
-    const blocked = ((w + 6) % 7);
-    const sel = new Set(t.unloadDays || []);
-    let html = `<div class="row">`;
-    for (let ww=0; ww<7; ww++) {
-      const dis = ww === blocked ? "disabled" : "";
-      const checked = sel.has(ww) ? "checked" : "";
-      html += `
-        <label class="muted" title="Разгрузочный день ${DAY_NAMES[ww]}">
-          <input type="checkbox" data-w="${ww}" ${dis} ${checked}/> ${DAY_NAMES[ww]}
-        </label>`;
+
+  /** Текст для массива разгрузок. */
+  formatUnload(arr){
+    if (!arr || arr.length === 0) return "—";
+    const uniq = Array.from(new Set(arr)).filter(n => n>=0 && n<=6).sort((a,b)=>a-b);
+    return uniq.map(n => DAY[n]).join(", ");
+  }
+
+  /** Модалка добавления предмета с разгрузкой. */
+  openAddForm(weekday){
+    const node = document.createElement("div");
+    node.innerHTML = `
+      <h3>Новый предмет — ${DAY[weekday]}</h3>
+      <div class="form-row">
+        <label>Название</label>
+        <input type="text" data-f-title placeholder="Введите название">
+      </div>
+      <div class="form-row">
+        <label>Минуты</label>
+        <input type="number" min="0" step="5" data-f-min value="0">
+      </div>
+      <div class="form-row" data-unloads></div>
+      <div class="form-actions">
+        <button class="btn primary" data-save>Сохранить</button>
+      </div>
+    `;
+
+    // чекбоксы разгрузки
+    const ul = this.buildUnloadDays([]);
+    node.querySelector("[data-unloads]").appendChild(ul);
+
+    openModal(node, {
+      onSave: () => {
+        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+        const unloadDays = this.readUnloadDays(ul);
+        if (!title) return;
+        this.h.onAdd(weekday, title, minutes, unloadDays);
+      }
+    });
+  }
+
+  /** Модалка правки предмета (включая разгрузку). */
+  openEditForm(weekday, task){
+    const node = document.createElement("div");
+    node.innerHTML = `
+      <h3>Правка предмета — ${DAY[weekday]}</h3>
+      <div class="form-row">
+        <label>Название</label>
+        <input type="text" data-f-title value="${task.title}">
+      </div>
+      <div class="form-row">
+        <label>Минуты</label>
+        <input type="number" min="0" step="5" data-f-min value="${task.minutes}">
+      </div>
+      <div class="form-row" data-unloads></div>
+      <div class="form-actions">
+        <button class="btn btn-danger" data-delete>Удалить предмет</button>
+        <button class="btn primary" data-save>Сохранить</button>
+      </div>
+    `;
+
+    const ul = this.buildUnloadDays(task.unloadDays || []);
+    node.querySelector("[data-unloads]").appendChild(ul);
+
+    const close = openModal(node, {
+      onSave: () => {
+        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+        const unloadDays = this.readUnloadDays(ul);
+        if (!title) return;
+        this.h.onEditSave(weekday, task.id, title, minutes, unloadDays);
+      }
+    });
+    node.querySelector("[data-delete]")?.addEventListener("click", () => {
+      this.h.onRemove(weekday, task.id);
+      close();
+    }, { once: true });
+  }
+
+  /** Построить набор чекбоксов Пн..Вс. */
+  buildUnloadDays(unloadDays){
+    const set = new Set(Array.isArray(unloadDays) ? unloadDays : []);
+    const grid = document.createElement("div");
+    grid.style.display = "grid";
+    grid.style.gridTemplateColumns = "repeat(7, auto)";
+    grid.style.gap = "8px";
+
+    for (let w=0; w<7; w++){
+      const label = document.createElement("label");
+      label.style.display = "inline-flex";
+      label.style.alignItems = "center";
+      label.style.gap = "6px";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.setAttribute("data-w", String(w));
+      if (set.has(w)) cb.checked = true;
+      label.appendChild(cb);
+      label.appendChild(document.createTextNode(DAY[w]));
+      grid.appendChild(label);
     }
-    html += `</div>`;
-    return html;
+    return grid;
+  }
+
+  /** Прочитать массив выбранных дней разгрузки. */
+  readUnloadDays(fromNode){
+    const out = [];
+    fromNode.querySelectorAll('input[type="checkbox"][data-w]').forEach(cb => {
+      if (cb.checked) out.push(Number(cb.getAttribute("data-w")));
+    });
+    return out;
   }
 }
+
 
