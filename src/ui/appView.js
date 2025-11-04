@@ -2,7 +2,7 @@
  * Верхняя навигация из трёх кнопок.
  */
 const buttons = [
-  { route: "dashboard", label: "Дашборд" },
+  { route: "dashboard", label: "Сегодня" },
   { route: "schedule", label: "Расписание" },
   { route: "calendar", label: "Календарь" },
 ];
