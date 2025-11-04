@@ -1,6 +1,7 @@
 /** 
  * DashboardView — отображение дашборда.
  * Модалка и кнопка "+" создаются динамически (index.html править не нужно).
+ * Инлайнового редактирования минут НЕТ — правка через модалку.
  */
 import { minutesToHhmm } from "../../../utils/date.js";
 import { ensureModalRoot, openModal } from "../../components/modal.js";
@@ -131,7 +132,7 @@ export class DashboardView{
     });
   }
 
-  /** Карточка основной задачи. */
+  /** Карточка основной задачи (без инлайнового редактирования минут). */
   renderTaskCard(t){
     const card = document.createElement("div");
     card.className = "card";
@@ -149,21 +150,11 @@ export class DashboardView{
         <button class="btn" data-action="toggle">${t.closed ? "Открыть" : "Закрыть"}</button>
         <button class="btn" data-action="edit">Править</button>
       </div>
-      <div class="row">
-        <label>Минуты:
-          <input class="input" type="number" min="0" step="5" value="${t.minutes}">
-        </label>
-        <button class="btn" data-action="save-minutes">Сохранить</button>
-      </div>
     `;
     card.querySelector('[data-step="-1"]').addEventListener("click", () => this.h.onStep(t.id, -1));
     card.querySelector('[data-step="+1"]').addEventListener("click", () => this.h.onStep(t.id, +1));
     card.querySelector('.range').addEventListener("input", (e) => this.h.onSlide(t.id, e.target.value));
     card.querySelector('[data-action="toggle"]').addEventListener("click", () => this.h.onToggle(t.id));
-    card.querySelector('[data-action="save-minutes"]').addEventListener("click", () => {
-      const val = Number(card.querySelector('input[type="number"]').value);
-      this.h.onSetMinutes(t.id, val);
-    });
     card.querySelector('[data-action="edit"]').addEventListener("click", () => this.openEditForm(t));
     return card;
   }
@@ -192,7 +183,4 @@ export class DashboardView{
     return card;
   }
 }
-
-
-
 
