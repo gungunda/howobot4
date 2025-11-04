@@ -1,10 +1,13 @@
 /**
  * SchedulePresenter — управление расписанием.
- * Разгрузка редактируется ТОЛЬКО через модалки (add/edit).
+ * ВСЕ изменения через юзкейсы Add/Edit/DropScheduleTask (единое действие модалки).
  */
-import { loadSchedule, saveSchedule, genId } from "../../../storage/storage.js";
-import { Task } from "../../../entities/entities.js";
+import { loadSchedule } from "../../../storage/storage.js";
 import { ScheduleView } from "./view.js";
+
+import { AddScheduleTask } from "../../../usecases/AddScheduleTask.js";
+import { EditScheduleTask } from "../../../usecases/EditScheduleTask.js";
+import { DropScheduleTask } from "../../../usecases/DropScheduleTask.js";
 
 export class SchedulePresenter {
   /** @param {HTMLElement} sectionRoot */
@@ -17,56 +20,30 @@ export class SchedulePresenter {
     const els = { weekRoot: this.root.querySelector("[data-schedule-week]") };
     this.view = new ScheduleView(els, {
       schedule: this.schedule,
-      onAdd: (weekday, title, minutes, unloadDays) => this.onAdd(weekday, title, minutes, unloadDays),
+      onAdd:      (weekday, title, minutes, unloadDays) => this.onAdd(weekday, title, minutes, unloadDays),
       onEditSave: (weekday, taskId, title, minutes, unloadDays) => this.onEditSave(weekday, taskId, title, minutes, unloadDays),
-      onRemove: (weekday, taskId) => this.onRemove(weekday, taskId),
+      onRemove:   (weekday, taskId) => this.onRemove(weekday, taskId),
     });
     this.view.render();
   }
   refresh(){ this.render(); }
 
-  /** Добавить новый предмет и сразу установить unloadDays. */
+  /** Добавить новый предмет и разгрузки (одно действие). */
   onAdd(weekday, title, minutes, unloadDays){
-    const t = new Task({
-      id: genId(),
-      title: String(title||"").trim(),
-      minutes: Number(minutes)||0,
-      progress: 0,
-      closed: false,
-      unloadDays: []
-    });
-    this.schedule.add(weekday, t);
-
-    // установить разгрузки
-    const days = this.normUnload(unloadDays);
-    this.schedule.setUnloadDays(weekday, t.id, days);
-
-    saveSchedule(this.schedule);
+    AddScheduleTask({ weekday, title, minutes, unloadDays });
     this.refresh();
   }
 
-  /** Сохранить правки предмета, включая unloadDays. */
+  /** Сохранить правки предмета (одно действие). */
   onEditSave(weekday, taskId, title, minutes, unloadDays){
-    const tt = String(title||"").trim();
-    const mm = Number(minutes)||0;
-    this.schedule.rename(weekday, taskId, tt);
-    this.schedule.setMinutes(weekday, taskId, mm);
-    this.schedule.setUnloadDays(weekday, taskId, this.normUnload(unloadDays));
-    saveSchedule(this.schedule);
+    EditScheduleTask({ weekday, taskId, title, minutes, unloadDays });
     this.refresh();
   }
 
-  /** Удалить предмет (доступно только через модалку). */
+  /** Удалить предмет (только из модалки). */
   onRemove(weekday, taskId){
-    this.schedule.remove(weekday, taskId);
-    saveSchedule(this.schedule);
+    DropScheduleTask({ weekday, taskId });
     this.refresh();
-  }
-
-  /** Нормализация массива дней разгрузки. */
-  normUnload(arr){
-    const set = new Set((arr||[]).map(n => Number(n)).filter(n => n>=0 && n<=6));
-    return Array.from(set).sort((a,b)=>a-b);
   }
 }
 

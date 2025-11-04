@@ -9,17 +9,12 @@ import { ensureModalRoot, openModal } from "../../components/modal.js";
 const DAY = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 
 export class ScheduleView {
-  /**
-   * @param {object} els
-   * @param {object} h  — обработчики презентера
-   */
   constructor(els, h){
     this.els = els || {};
     this.h = h;
     ensureModalRoot();
   }
 
-  /** Полная отрисовка недельного расписания. */
   render(){
     const root = this.els.weekRoot;
     root.innerHTML = "";
@@ -28,7 +23,6 @@ export class ScheduleView {
     }
   }
 
-  /** Один день расписания. */
   renderDay(w){
     const wrap = document.createElement("div");
     wrap.className = "card";
@@ -53,7 +47,6 @@ export class ScheduleView {
     return wrap;
   }
 
-  /** Строка предмета (без чекбоксов и без кнопки удаления). */
   renderTaskRow(w, t){
     const row = document.createElement("div");
     row.className = "row";
@@ -76,14 +69,12 @@ export class ScheduleView {
     return row;
   }
 
-  /** Текст для массива разгрузок. */
   formatUnload(arr){
     if (!arr || arr.length === 0) return "—";
     const uniq = Array.from(new Set(arr)).filter(n => n>=0 && n<=6).sort((a,b)=>a-b);
     return uniq.map(n => DAY[n]).join(", ");
   }
 
-  /** Модалка добавления предмета с разгрузкой. */
   openAddForm(weekday){
     const node = document.createElement("div");
     node.innerHTML = `
@@ -102,8 +93,7 @@ export class ScheduleView {
       </div>
     `;
 
-    // чекбоксы разгрузки
-    const ul = this.buildUnloadDays([]);
+    const ul = this.buildUnloadDays(weekday, []);
     node.querySelector("[data-unloads]").appendChild(ul);
 
     openModal(node, {
@@ -117,7 +107,6 @@ export class ScheduleView {
     });
   }
 
-  /** Модалка правки предмета (включая разгрузку). */
   openEditForm(weekday, task){
     const node = document.createElement("div");
     node.innerHTML = `
@@ -137,7 +126,7 @@ export class ScheduleView {
       </div>
     `;
 
-    const ul = this.buildUnloadDays(task.unloadDays || []);
+    const ul = this.buildUnloadDays(weekday, task.unloadDays || []);
     node.querySelector("[data-unloads]").appendChild(ul);
 
     const close = openModal(node, {
@@ -155,34 +144,45 @@ export class ScheduleView {
     }, { once: true });
   }
 
-  /** Построить набор чекбоксов Пн..Вс. */
-  buildUnloadDays(unloadDays){
+  /**
+   * Построить набор чекбоксов Пн..Вс.
+   * prev = (weekday - 1 + 7) % 7 — основной день (D=R-1), его чекбокс дизейблим.
+   */
+  buildUnloadDays(weekday, unloadDays){
+    const prev = (weekday + 6) % 7;
     const set = new Set(Array.isArray(unloadDays) ? unloadDays : []);
+
     const grid = document.createElement("div");
-    grid.style.display = "grid";
-    grid.style.gridTemplateColumns = "repeat(7, auto)";
-    grid.style.gap = "8px";
+    grid.className = "unload-grid";
 
     for (let w=0; w<7; w++){
       const label = document.createElement("label");
-      label.style.display = "inline-flex";
-      label.style.alignItems = "center";
-      label.style.gap = "6px";
       const cb = document.createElement("input");
       cb.type = "checkbox";
       cb.setAttribute("data-w", String(w));
-      if (set.has(w)) cb.checked = true;
+
+      if (w === prev){
+        cb.checked = false;
+        cb.disabled = true;
+        label.title = "Основной день — не выбирается для разгрузки";
+      } else if (set.has(w)){
+        cb.checked = true;
+      }
+
+      const span = document.createElement("span");
+      span.textContent = DAY[w];
+
       label.appendChild(cb);
-      label.appendChild(document.createTextNode(DAY[w]));
+      label.appendChild(span);
       grid.appendChild(label);
     }
     return grid;
   }
 
-  /** Прочитать массив выбранных дней разгрузки. */
   readUnloadDays(fromNode){
     const out = [];
     fromNode.querySelectorAll('input[type="checkbox"][data-w]').forEach(cb => {
+      if (cb.disabled) return;
       if (cb.checked) out.push(Number(cb.getAttribute("data-w")));
     });
     return out;
