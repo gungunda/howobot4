@@ -1,3 +1,4 @@
+
 /** 
  * DashboardPresenter — презентер экрана «Дашборд».
  * Задачи дня правятся в DayTasks(D), где D = this.baseDate (прямо).
@@ -8,6 +9,7 @@ import { LoadDashboard } from "../../../usecases/LoadDashboard.js";
 import { SetProgress } from "../../../usecases/SetProgress.js";
 import { ToggleClosed } from "../../../usecases/ToggleClosed.js";
 import { ResetDay } from "../../../usecases/ResetDay.js";
+import { ResetToSchedule } from "../../../usecases/ResetToSchedule.js";
 import { DashboardView } from "./view.js";
 import { config } from "../../../config.js";
 import { AddDayTask } from "../../../usecases/AddDayTask.js";
@@ -38,6 +40,7 @@ export class DashboardPresenter {
       offloadWrap: this.root.querySelector('[data-dashboard-offload-wrapper]'),
       offloadList: this.root.querySelector('[data-dashboard-offload]'),
       resetBtn: this.root.querySelector('[data-action="reset-day"]'),
+      resetToScheduleBtn: this.root.querySelector('[data-action="reset-to-schedule"]'),
     };
 
     this.view = new DashboardView(els, {
@@ -48,6 +51,8 @@ export class DashboardPresenter {
       onToggle: (taskId) => this.onToggle(taskId),
 
       onResetDay: () => this.onResetDay(),
+
+      onResetToSchedule: () => this.onResetToSchedule(),
 
       // модалки
       onAddSave: (title, minutes) => this.onAddSave(title, minutes),
@@ -67,39 +72,44 @@ export class DashboardPresenter {
   // === Целевая дата для сохранений — СЕГОДНЯ (baseDate) ===
   get todayIso(){ return date.toIsoDate(this.baseDate); }
 
-  /** Основные задачи — прогресс ±10%. */
+  /** Шаг прогресса ±10%. */
   onStep(taskId, sign){
     SetProgress({ date: this.todayIso, taskId, delta: sign * config.progressStep });
     this.refresh();
   }
 
-  /** Основные задачи — ползунок. */
+  /** Ползунок прогресса (0..100). */
   onSlide(taskId, value){
     SetProgress({ date: this.todayIso, taskId, value: Number(value) });
     this.refresh();
   }
 
-  /** Основные задачи — закрыть/открыть. */
+  /** Переключить закрыто/открыто. */
   onToggle(taskId){
-    ToggleClosed({ taskId, date: this.todayIso });
+    ToggleClosed({ date: this.todayIso, taskId });
     this.refresh();
   }
 
-  /** Очистка дня. */
   onResetDay(){
     ResetDay({ date: this.todayIso });
     this.refresh();
   }
 
-  /** Добавить новую задачу в сегодня. */
-  onAddSave(title, minutes){
-    AddDayTask({ date: this.todayIso, title, minutes: Number(minutes)||0 });
+  /** Вернуть расписание (удалить оверрайд) */
+  onResetToSchedule(){
+    ResetToSchedule({ date: this.todayIso });
     this.refresh();
   }
 
-  /** Правка существующей задачи сегодня. */
+  /** Добавить новую задачу в сегодня. */
+  onAddSave(title, minutes){
+    AddDayTask({ date: this.todayIso, title, minutes });
+    this.refresh();
+  }
+
+  /** Сохранить правку существующей задачи. */
   onEditSave(taskId, title, minutes){
-    EditDayTask({ date: this.todayIso, taskId, title, minutes: Number(minutes)||0 });
+    EditDayTask({ date: this.todayIso, taskId, title, minutes });
     this.refresh();
   }
 
@@ -115,4 +125,5 @@ export class DashboardPresenter {
     this.refresh();
   }
 }
+
 

@@ -1,3 +1,4 @@
+
 /** 
  * DashboardView — отображение дашборда.
  * Модалка и кнопка "+" создаются динамически (index.html править не нужно).
@@ -34,16 +35,15 @@ export class DashboardView{
     // ETA может называться finish — поддержим оба поля
     this.els.stats.eta.textContent     = vm.metrics.eta || vm.metrics.finish || "0:00";
 
-    // Кнопка «Очистить день»
-    if (this.els.resetBtn){
-      this.els.resetBtn.onclick = () => this.h.onResetDay();
-    }
+    // Кнопки «Очистить день» и «Вернуть к расписанию»
+    if (this.els.resetBtn){ this.els.resetBtn.onclick = () => this.h.onResetDay(); }
+    if (this.els.resetToScheduleBtn){ this.els.resetToScheduleBtn.onclick = () => this.h.onResetToSchedule(); }
 
     // Список задач дня
     this.els.list.innerHTML = "";
     vm.tasks.forEach(t => this.els.list.appendChild(this.renderTaskCard(t)));
 
-    // Кнопка «+» — добавляется сразу под списком задач (динамически)
+    // Кнопка «+» под списком
     this.injectAddButton();
 
     // Разгрузка
@@ -76,26 +76,28 @@ export class DashboardView{
   openAddForm(){
     const node = document.createElement("div");
     node.innerHTML = `
-      <h3>Новая задача</h3>
+      <h3>Новая задача на сегодня</h3>
       <div class="form-row">
         <label>Название</label>
-        <input type="text" data-f-title placeholder="Введите название">
+        <input data-f-title placeholder="Предмет" />
       </div>
       <div class="form-row">
         <label>Минуты</label>
-        <input type="number" min="0" step="5" data-f-min value="0">
+        <input data-f-min type="number" min="0" step="5" value="25" />
       </div>
-      <div class="form-actions">
-        <button class="btn ghost" data-cancel>Отмена</button>
-        <button class="btn primary" data-save>Сохранить</button>
+      <div class="actions">
+        <button class="btn" data-f-save>Добавить</button>
+        <button class="btn btn-muted" data-f-cancel>Отмена</button>
       </div>
     `;
     openModal(node, {
-      onSave: () => {
-        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
-        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
-        if (!title) return; // простая валидация
-        this.h.onAddSave(title, minutes);
+      onMount: () => {
+        node.querySelector('[data-f-save]')?.addEventListener('click', () => {
+          const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+          const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+          if (!title) return; // простая валидация
+          this.h.onAddSave(title, minutes);
+        });
       }
     });
   }
@@ -107,28 +109,31 @@ export class DashboardView{
       <h3>Правка задачи</h3>
       <div class="form-row">
         <label>Название</label>
-        <input type="text" data-f-title value="${t.title}">
+        <input data-f-title value="${t.title}" />
       </div>
       <div class="form-row">
         <label>Минуты</label>
-        <input type="number" min="0" step="5" data-f-min value="${t.minutes}">
+        <input data-f-min type="number" min="0" step="5" value="${t.minutes}" />
       </div>
-      <div class="form-actions">
-        <button class="btn ghost" data-cancel>Отмена</button>
-        <button class="btn primary" data-save>Сохранить</button>
+      <div class="actions">
+        <button class="btn" data-f-save>Сохранить</button>
+        <button class="btn btn-muted" data-f-cancel>Отмена</button>
       </div>
     `;
     openModal(node, {
-      onSave: () => {
-        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
-        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
-        if (!title) return;
-        this.h.onEditSave(t.id, title, minutes);
+      onMount: () => {
+        node.querySelector('[data-f-save]')?.addEventListener('click', () => {
+          const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+          const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+          if (!title) return;
+          this.h.onEditSave(t.id, title, minutes);
+        });
       }
     });
   }
 
-  /** Карточка основной задачи. */
+
+  /** Карточка основной задачи (без инлайнового редактирования минут). */
   renderTaskCard(t){
     const card = document.createElement("div");
     card.className = "card";
@@ -179,4 +184,5 @@ export class DashboardView{
     return card;
   }
 }
+
 

@@ -1,3 +1,4 @@
+
 /** Утилиты работы с датами (защищены от строк/таймстампов). */
 
 function asDate(d = new Date()) {
@@ -14,12 +15,11 @@ export function copy(d) {
 }
 
 export function dPlus1(d = today()) {
-  const c = asDate(d);
-  c.setDate(c.getDate() + 1);
-  return c;
+  const x = copy(d);
+  x.setDate(x.getDate() + 1);
+  return x;
 }
 
-/** Возвращает ISO-строку YYYY-MM-DD. Принимает Date/строку/timestamp. */
 export function toIsoDate(d = today()) {
   const x = asDate(d);
   const y = x.getFullYear().toString().padStart(4, "0");
@@ -72,6 +72,14 @@ export function isSameDay(a, b) {
 export function isToday(d) { return isSameDay(d, today()); }
 export function addDays(d, n) { const c = asDate(d); c.setDate(c.getDate() + Number(n||0)); return c; }
 export function addMonths(d, n) { const c = asDate(d); c.setMonth(c.getMonth() + Number(n||0)); return c; }
+/** Добавить минуты к дате. */
+export function addMinutes(d, n) { const c = asDate(d); c.setMinutes(c.getMinutes() + Number(n||0)); return c; }
+
+/** Формат локального времени HH:MM. */
+export function timeHhmm(d = today()) {
+  const x = asDate(d);
+  return `${String(x.getHours()).padStart(2,"0")}:${String(x.getMinutes()).padStart(2,"0")}`;
+}
 export function monthLabel(d) { const x = asDate(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}`; }
 
 /** Найти ближайшую дату вперёд с заданным днём недели (Пн=0..Вс=6). */
@@ -86,4 +94,5 @@ export function nextDateWithWeekdayMon0(fromDate, weekdayMon0, includeToday = fa
   }
   return cur;
 }
+
 

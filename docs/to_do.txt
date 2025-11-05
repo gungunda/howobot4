@@ -1,0 +1,306 @@
+FILE_INDEX_START
+/src/ui/pages/Dashboard/presenter.js
+/src/ui/pages/Dashboard/view.js
+FILE_INDEX_END
+
+// /src/ui/pages/Dashboard/presenter.js
+/** 
+ * DashboardPresenter — презентер экрана «Дашборд».
+ * Задачи дня правятся в DayTasks(D), где D = this.baseDate (прямо).
+ * D+1 используется только для показа списка (шаблон расписания на завтра).
+ */
+import * as date from "../../../utils/date.js";
+import { LoadDashboard } from "../../../usecases/LoadDashboard.js";
+import { SetProgress } from "../../../usecases/SetProgress.js";
+import { ToggleClosed } from "../../../usecases/ToggleClosed.js";
+import { ResetDay } from "../../../usecases/ResetDay.js";
+import { DashboardView } from "./view.js";
+import { config } from "../../../config.js";
+import { AddDayTask } from "../../../usecases/AddDayTask.js";
+import { EditDayTask } from "../../../usecases/EditDayTask.js";
+
+export class DashboardPresenter {
+  /** @param {HTMLElement} sectionRoot */
+  constructor(sectionRoot){
+    this.root = sectionRoot;
+    this.baseDate = date.today();
+  }
+
+  /** Рендер экрана. */
+  render(){
+    // D+1 — только для композиции показа
+    const d1 = date.dPlus1(this.baseDate);
+    const vm = LoadDashboard(d1);
+
+    const els = {
+      dateEl: this.root.querySelector('[data-dashboard-date]'),
+      stats: {
+        planned: this.root.querySelector('[data-dashboard-stat="planned"]'),
+        done:    this.root.querySelector('[data-dashboard-stat="done"]'),
+        left:    this.root.querySelector('[data-dashboard-stat="left"]'),
+        eta:     this.root.querySelector('[data-dashboard-stat="eta"]'),
+      },
+      list: this.root.querySelector('[data-dashboard-tasks]'),
+      offloadWrap: this.root.querySelector('[data-dashboard-offload-wrapper]'),
+      offloadList: this.root.querySelector('[data-dashboard-offload]'),
+      resetBtn: this.root.querySelector('[data-action="reset-day"]'),
+    };
+
+    this.view = new DashboardView(els, {
+      dateIso: date.toIsoDate(d1),
+      vm,
+      onStep: (taskId, sign) => this.onStep(taskId, sign),
+      onSlide: (taskId, value) => this.onSlide(taskId, value),
+      onToggle: (taskId) => this.onToggle(taskId),
+
+      onResetDay: () => this.onResetDay(),
+
+      // модалки
+      onAddSave: (title, minutes) => this.onAddSave(title, minutes),
+      onEditSave: (taskId, title, minutes) => this.onEditSave(taskId, title, minutes),
+
+      // оффлоад
+      onOffloadStep: (taskId, targetIso, sign) => this.onOffloadStep(taskId, targetIso, sign),
+      onOffloadSlide: (taskId, targetIso, value) => this.onOffloadSlide(taskId, targetIso, value),
+    });
+
+    this.view.render();
+  }
+
+  /** Полный перерендер. */
+  refresh(){ this.render(); }
+
+  // === Целевая дата для сохранений — СЕГОДНЯ (baseDate) ===
+  get todayIso(){ return date.toIsoDate(this.baseDate); }
+
+  /** Основные задачи — прогресс ±10%. */
+  onStep(taskId, sign){
+    SetProgress({ date: this.todayIso, taskId, delta: sign * config.progressStep });
+    this.refresh();
+  }
+
+  /** Основные задачи — ползунок. */
+  onSlide(taskId, value){
+    SetProgress({ date: this.todayIso, taskId, value: Number(value) });
+    this.refresh();
+  }
+
+  /** Основные задачи — закрыть/открыть. */
+  onToggle(taskId){
+    ToggleClosed({ taskId, date: this.todayIso });
+    this.refresh();
+  }
+
+  /** Очистка дня. */
+  onResetDay(){
+    ResetDay({ date: this.todayIso });
+    this.refresh();
+  }
+
+  /** Добавить новую задачу в сегодня. */
+  onAddSave(title, minutes){
+    AddDayTask({ date: this.todayIso, title, minutes: Number(minutes)||0 });
+    this.refresh();
+  }
+
+  /** Правка существующей задачи сегодня. */
+  onEditSave(taskId, title, minutes){
+    EditDayTask({ date: this.todayIso, taskId, title, minutes: Number(minutes)||0 });
+    this.refresh();
+  }
+
+  /** Оффлоад — шаг ±10%. */
+  onOffloadStep(taskId, targetIso, sign){
+    SetProgress({ date: targetIso, taskId, delta: sign * config.progressStep });
+    this.refresh();
+  }
+
+  /** Оффлоад — ползунок. */
+  onOffloadSlide(taskId, targetIso, value){
+    SetProgress({ date: targetIso, taskId, value: Number(value) });
+    this.refresh();
+  }
+}
+
+// /src/ui/pages/Dashboard/view.js
+/** 
+ * DashboardView — отображение дашборда.
+ * Модалка и кнопка "+" создаются динамически (index.html править не нужно).
+ * Инлайнового редактирования минут НЕТ — правка через модалку.
+ */
+import { minutesToHhmm } from "../../../utils/date.js";
+import { ensureModalRoot, openModal } from "../../components/modal.js";
+
+const DAY_NAMES = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+
+export class DashboardView{
+  /**
+   * @param {object} els - ссылки на элементы DOM
+   * @param {object} handlers - колбэки презентера
+   */
+  constructor(els, handlers){
+    /** @type {any} */
+    this.els = els;
+    /** @type {any} */
+    this.h = handlers;
+
+    // Готовим модалку (если нет в DOM — создадим)
+    ensureModalRoot();
+  }
+
+  /** Отрисовать дашборд. */
+  render(){
+    const { dateIso, vm } = this.h;
+
+    if (this.els.dateEl) this.els.dateEl.textContent = `(${dateIso})`;
+    this.els.stats.planned.textContent = vm.metrics.load || "0:00";
+    this.els.stats.done.textContent    = vm.metrics.done ?? "0%";
+    this.els.stats.left.textContent    = vm.metrics.left || "0:00";
+    // ETA может называться finish — поддержим оба поля
+    this.els.stats.eta.textContent     = vm.metrics.eta || vm.metrics.finish || "0:00";
+
+    // Кнопка «Очистить день»
+    if (this.els.resetBtn){
+      this.els.resetBtn.onclick = () => this.h.onResetDay();
+    }
+
+    // Список задач дня
+    this.els.list.innerHTML = "";
+    vm.tasks.forEach(t => this.els.list.appendChild(this.renderTaskCard(t)));
+
+    // Кнопка «+» — добавляется сразу под списком задач (динамически)
+    this.injectAddButton();
+
+    // Разгрузка
+    if (this.els.offloadWrap){
+      const hasOffload = (vm.offload && vm.offload.length > 0);
+      this.els.offloadWrap.hidden = !hasOffload;
+      this.els.offloadList.innerHTML = "";
+      if (hasOffload){
+        vm.offload.forEach(o => this.els.offloadList.appendChild(this.renderOffloadCard(o)));
+      }
+    }
+  }
+
+  /** Вставить кнопку «+» под списком задач. */
+  injectAddButton(){
+    // Удалим прежнюю кнопку, если была
+    const prev = this.els.list.parentElement.querySelector(".dashboard-add");
+    if (prev) prev.remove();
+
+    const btn = document.createElement("button");
+    btn.className = "btn primary dashboard-add";
+    btn.textContent = "+";
+    btn.addEventListener("click", () => this.openAddForm());
+
+    // Вставляем сразу после списка
+    this.els.list.parentElement.appendChild(btn);
+  }
+
+  /** Открыть модалку для добавления новой задачи в сегодня. */
+  openAddForm(){
+    const node = document.createElement("div");
+    node.innerHTML = `
+      <h3>Новая задача</h3>
+      <div class="form-row">
+        <label>Название</label>
+        <input type="text" data-f-title placeholder="Введите название">
+      </div>
+      <div class="form-row">
+        <label>Минуты</label>
+        <input type="number" min="0" step="5" data-f-min value="0">
+      </div>
+      <div class="form-actions">
+        <button class="btn ghost" data-cancel>Отмена</button>
+        <button class="btn primary" data-save>Сохранить</button>
+      </div>
+    `;
+    openModal(node, {
+      onSave: () => {
+        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+        if (!title) return; // простая валидация
+        this.h.onAddSave(title, minutes);
+      }
+    });
+  }
+
+  /** Открыть модалку для редактирования существующей задачи. */
+  openEditForm(t){
+    const node = document.createElement("div");
+    node.innerHTML = `
+      <h3>Правка задачи</h3>
+      <div class="form-row">
+        <label>Название</label>
+        <input type="text" data-f-title value="${t.title}">
+      </div>
+      <div class="form-row">
+        <label>Минуты</label>
+        <input type="number" min="0" step="5" data-f-min value="${t.minutes}">
+      </div>
+      <div class="form-actions">
+        <button class="btn ghost" data-cancel>Отмена</button>
+        <button class="btn primary" data-save>Сохранить</button>
+      </div>
+    `;
+    openModal(node, {
+      onSave: () => {
+        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+        if (!title) return;
+        this.h.onEditSave(t.id, title, minutes);
+      }
+    });
+  }
+
+  /** Карточка основной задачи. */
+  renderTaskCard(t){
+    const card = document.createElement("div");
+    card.className = "card";
+    const hhmm = minutesToHhmm(t.minutes);
+    card.innerHTML = `
+      <div class="row">
+        <strong>${t.title}</strong>
+        <span class="muted">${hhmm}</span>
+      </div>
+      <div class="row">
+        <button class="btn" data-step="-1">−10%</button>
+        <input class="range" type="range" min="0" max="100" step="10" value="${t.progress}">
+        <button class="btn" data-step="+1">+10%</button>
+        <span>${t.progress}%</span>
+        <button class="btn" data-action="toggle">${t.closed ? "Открыть" : "Закрыть"}</button>
+        <button class="btn" data-action="edit">Править</button>
+      </div>
+    `;
+    card.querySelector('[data-step="-1"]').addEventListener("click", () => this.h.onStep(t.id, -1));
+    card.querySelector('[data-step="+1"]').addEventListener("click", () => this.h.onStep(t.id, +1));
+    card.querySelector('.range').addEventListener("input", (e) => this.h.onSlide(t.id, e.target.value));
+    card.querySelector('[data-action="toggle"]').addEventListener("click", () => this.h.onToggle(t.id));
+    card.querySelector('[data-action="edit"]').addEventListener("click", () => this.openEditForm(t));
+    return card;
+  }
+
+  /** Карточка разгрузки. */
+  renderOffloadCard(o){
+    const card = document.createElement("div");
+    card.className = "card";
+    const hhmm = minutesToHhmm(o.minutes);
+    card.innerHTML = `
+      <div class="row">
+        <strong>${o.title}</strong>
+        <span class="muted">${hhmm}</span>
+        <span class="muted">из дня: ${DAY_NAMES[o.fromWeekday]}</span>
+      </div>
+      <div class="row">
+        <button class="btn" data-step="-1">−10%</button>
+        <input class="range" type="range" min="0" max="100" step="10" value="${o.progress}">
+        <button class="btn" data-step="+1">+10%</button>
+        <span>${o.progress}%</span>
+      </div>
+    `;
+    card.querySelector('[data-step="-1"]').addEventListener("click", () => this.h.onOffloadStep(o.id, o.targetIso, -1));
+    card.querySelector('[data-step="+1"]').addEventListener("click", () => this.h.onOffloadStep(o.id, o.targetIso, +1));
+    card.querySelector('.range').addEventListener("input", (e) => this.h.onOffloadSlide(o.id, o.targetIso, e.target.value));
+    return card;
+  }
+}
