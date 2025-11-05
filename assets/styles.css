@@ -30,6 +30,10 @@
     --card: #f8fafc;
     --focus-ring: rgba(11,95,255,.5);
 
+    /* Доп. токены для состояния/акцентов */
+    --accent-soft: rgba(11,95,255,.08);
+    --sel: rgba(11,95,255,.12);
+
     /* Типографика */
     --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
@@ -69,6 +73,8 @@
       --card: #11161d;
       --primary: #3b82f6;
       --focus-ring: rgba(59,130,246,.5);
+      --accent-soft: rgba(59,130,246,.14);
+      --sel: rgba(59,130,246,.18);
     }
   }
 }
@@ -88,7 +94,7 @@
     /* Safe areas по странице */
     padding-block-start: max(var(--s-4), env(safe-area-inset-top));
     padding-block-end: max(var(--s-4), env(safe-area-inset-bottom));
-    scrollbar-gutter: stable both-edges; /* меньше сдвигов при появлении скроллбара (десктоп-фолбэк) */
+    scrollbar-gutter: stable both-edges;
   }
 
   /* Доступный фокус */
@@ -115,7 +121,7 @@
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
     gap: var(--s-3);
-    padding: max(var(--s-3), env(safe-area-inset-top)) var(--s-4) var(--s-3); /* safe-area сверху */
+    padding: max(var(--s-3), env(safe-area-inset-top)) var(--s-4) var(--s-3);
     border-bottom: 1px solid var(--border);
     background: var(--bg);
     position: sticky; top: 0; z-index: 10;
@@ -135,14 +141,12 @@
   .section{ margin-block: var(--s-4); }
   .section-title{ margin: 0 0 var(--s-3); font-size: var(--fs-lg); }
 
-  .stats-row{
-    display:flex; gap: var(--s-3); flex-wrap:wrap; margin-block: var(--s-2);
-  }
+  .stats-row{ display:flex; gap: var(--s-3); flex-wrap:wrap; margin-block: var(--s-2); }
   .stat-box{
     padding: var(--s-1) var(--s-2);
     border:1px solid var(--border);
     border-radius: var(--r-2);
-    background: #fff;
+    background: var(--card);
     box-shadow: var(--shadow-1);
     flex: 1 1 calc(50% - var(--s-3));
     min-width: 12rem;
@@ -152,7 +156,6 @@
   .view.is-active{ display:block; }
 
   .row{ display:flex; gap: var(--s-2); align-items:center; flex-wrap:wrap; }
-
   .task-list{ display:flex; flex-direction:column; gap: var(--s-2); }
 
   .week-grid{ display:grid; grid-template-columns: repeat(1, 1fr); gap: var(--s-3); }
@@ -176,19 +179,10 @@
   }
 
   @supports (container-type: inline-size) {
-    @container (min-width: 40rem) {
-      .week-grid{ grid-template-columns: repeat(2, 1fr); }
-    }
-    @container (min-width: 64rem) {
-      .week-grid{ grid-template-columns: repeat(3, 1fr); }
-    }
-
-    @container (min-width: 30rem) {
-      .stat-box{ flex: 1 1 calc(33.333% - var(--s-3)); }
-    }
-    @container (min-width: 48rem) {
-      .stat-box{ flex: 1 1 calc(25% - var(--s-3)); min-width: 10rem; }
-    }
+    @container (min-width: 40rem) { .week-grid{ grid-template-columns: repeat(2, 1fr); } }
+    @container (min-width: 64rem) { .week-grid{ grid-template-columns: repeat(3, 1fr); } }
+    @container (min-width: 30rem) { .stat-box{ flex: 1 1 calc(33.333% - var(--s-3)); } }
+    @container (min-width: 48rem) { .stat-box{ flex: 1 1 calc(25% - var(--s-3)); min-width: 10rem; } }
   }
 
   @media (max-width: 360px) {
@@ -199,9 +193,10 @@
 }
 
 /* ---------------------------------------
-   COMPONENTS
+   COMPONENTS (микро-полировка UI)
 --------------------------------------- */
 @layer components {
+  /* ---------- Buttons ---------- */
   .btn{
     display: inline-flex;
     align-items: center;
@@ -217,10 +212,12 @@
     min-height: 2.75rem;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    transition: box-shadow .15s ease, transform .05s ease;
+    transition: box-shadow .15s ease, transform .05s ease, background-color .15s ease;
   }
-  .btn:where(:hover){ box-shadow: 0 1px 0 rgba(0,0,0,.06); }
-  .btn:where(:active){ transform: translateY(1px); }
+  @media (hover: hover) {
+    .btn:hover{ box-shadow: 0 1px 0 rgba(0,0,0,.06); background: var(--accent-soft); }
+  }
+  .btn:active{ transform: translateY(1px); }
   .btn:disabled{ opacity:.6; cursor: not-allowed; }
 
   .btn.primary { background: var(--primary); color: var(--primary-contrast); border-color: transparent; }
@@ -229,10 +226,11 @@
   .btn.full    { inline-size: 100%; }
 
   .btn-group{ display:flex; flex-wrap:wrap; gap: var(--s-2); }
-  .btn-icon{ inline-size: 1.25em; block-size: 1.25em; display:inline-block; }
+  .btn-icon{ inline-size: 1.25em; block-size: 1.25em; display:inline-flex; align-items:center; justify-content:center; }
 
   .btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
+  /* ---------- Inputs & Form Controls ---------- */
   .input,
   input[type="text"],
   input[type="number"],
@@ -246,6 +244,7 @@
     font-size: var(--fs-md);
     inline-size: 100%;
     background: #fff;
+    transition: border-color .15s ease, box-shadow .15s ease;
   }
   input::placeholder, textarea::placeholder{ color: var(--muted); }
   :where(.input, input, select, textarea):focus-visible{
@@ -257,36 +256,37 @@
     opacity:.7; background: #f3f4f6; cursor:not-allowed;
   }
 
-  .range{ inline-size: min(100%, 20rem); block-size: auto; }
-
-  .is-invalid{ border-color:#f59e0b; }
-  .help-text{ color: var(--muted); font-size: var(--fs-sm); margin-top: .25rem; }
-
-  .card{
-    border:1px solid var(--border);
-    background: var(--card);
-    padding: var(--s-3);
-    border-radius: var(--r-3);
-    margin-block: var(--s-2);
-    box-shadow: var(--shadow-1);
-  }
+  /* ---------- Cards ---------- */
+  .card{ border:1px solid var(--border); background: var(--card); padding: var(--s-3); border-radius: var(--r-3); margin-block: var(--s-2); box-shadow: var(--shadow-1); }
   .card-title{ font-weight:600; margin: 0 0 var(--s-2); font-size: var(--fs-md); }
   .card-actions{ display:flex; gap: var(--s-2); flex-wrap: wrap; }
 
+  /* ---------- Calendar cells ---------- */
   .calendar-grid .cell{
     display:flex; align-items:center; justify-content:center;
     padding: 0.625rem;
     border:1px solid var(--border); border-radius: var(--r-3);
     background:#fff; cursor:pointer; user-select:none;
-    min-height: 2.625rem;
-    transition: box-shadow .15s ease;
+    min-height: 2.75rem; /* было 2.625rem — довёл до ≥44px */
+    transition: box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
   }
-  .calendar-grid .cell.is-head{ background:transparent; border:none; font-weight:600; color:var(--muted); cursor:default; }
+  .calendar-grid .cell.is-head{
+    background:transparent; border:none; font-weight:600; color:var(--muted); cursor:default;
+  }
   .calendar-grid .cell.is-outside-month{ opacity:.5; }
-  .calendar-grid .cell.is-today{ outline:2px solid var(--primary); }
-  .calendar-grid .cell.is-selected{ background:var(--card); border-color:var(--primary); }
-  .calendar-grid .cell:hover{ box-shadow:0 0 0 2px rgba(0,0,0,.04); }
+  .calendar-grid .cell.is-today{ outline:2px solid var(--primary); outline-offset: 2px; }
+  .calendar-grid .cell.is-selected,
+  .calendar-grid .cell[aria-selected="true"],
+  .calendar-grid .cell[data-selected="true"]{
+    background: var(--sel);
+    border-color: var(--primary);
+  }
+  @media (hover: hover) {
+    .calendar-grid .cell:hover{ box-shadow:0 0 0 2px rgba(0,0,0,.04); background: var(--accent-soft); }
+  }
+  .calendar-grid .cell:focus-visible{ outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
+  /* ---------- Modal ---------- */
   .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; }
   .modal[open] { display: flex; }
   .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
@@ -314,7 +314,7 @@
 }
 
 /* ---------------------------------------
-   UTILITIES (включая перфоманс-хелперы)
+   UTILITIES (в т.ч. улучшение UX)
 --------------------------------------- */
 @layer utilities {
   .topbar-title{ font-weight:600; }
@@ -326,39 +326,53 @@
     white-space:nowrap !important; border:0 !important;
   }
 
-  /* -------- Performance helpers -------- */
-  @supports (content-visibility: auto) {
-    /* Виртуализация длинных списков карточек: резервируем примерную высоту,
-       браузер отрисует только видимые элементы */
-    .vlist > * {
-      content-visibility: auto;
-      contain-intrinsic-size: 160px; /* тюнится под среднюю высоту карточки */
-    }
-    /* Секции/блоки, которые редко попадают в вьюпорт (например, архив) */
-    .virtual-section {
-      content-visibility: auto;
-      contain-intrinsic-size: 600px 800px;
-    }
+  /* Утилита расширения тач-цели для компактных икон-кнопок */
+  .tap-area {
+    position: relative;
+  }
+  .tap-area::after {
+    content: "";
+    position: absolute;
+    inset: -6px;          /* +12px к ширине/высоте зоны клика */
   }
 
-  /* Фолбэк: отключить «тяжёлые» тени/градиенты при экономии данных */
+  /* Виртуализация/экономия */
+  @supports (content-visibility: auto) {
+    .vlist > * { content-visibility: auto; contain-intrinsic-size: 160px; }
+    .virtual-section { content-visibility: auto; contain-intrinsic-size: 600px 800px; }
+  }
   @media (prefers-reduced-data: reduce) {
-    :root {
-      --shadow-1: none;
-      --shadow-2: none;
-    }
+    :root { --shadow-1: none; --shadow-2: none; }
     .modal-card { box-shadow: none; }
     .btn { transition: none; }
   }
-
-  /* Предпочтение сниженной анимации */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-      scroll-behavior: auto !important;
-    }
+    *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+}
+
+
+/* ---------------------------------------
+   STAGE 10 ADDITIONS (minor layout glue for existing markup)
+--------------------------------------- */
+@layer layout {
+  .section-head{
+    display:flex;
+    align-items:center;
+    justify-content: space-between;
+    gap: var(--s-2);
+    flex-wrap: wrap;
+    margin-block: var(--s-2);
+  }
+  .calendar-header {
+    justify-content: center;
+  }
+}
+@layer components {
+  .cal-label{
+    min-width: 8ch;
+    text-align: center;
+    font-weight: 600;
   }
 }
 
