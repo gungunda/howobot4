@@ -1,3 +1,4 @@
+// /src/storage/storage.js
 /**
  * Единое хранилище поверх localStorage.
  * Ключи:
@@ -131,42 +132,25 @@ export function ensureDayTask(dateIso, taskId){
 
 /**
  * Композиция для экрана D+1:
- *  - base: задачи из расписания для weekdayRu(D+1)
- *  - override: DayTasks(D) как патчи по id (minutes/progress/closed; title правится отдельным usecase)
+ *  - если override(D) существует — он источник истины, показываем ТОЛЬКО его задачи;
+ *  - если override(D) нет — показываем чистое расписание для weekdayRu(D+1).
  * Возвращает { dateIso (D+1 ISO), tasks: Task[] }.
- *
- * Новая логика: если override(D) существует и ПУСТОЙ, считаем, что пользователь очистил день —
- * возвращаем пустой список задач (видимый список пуст).
  */
 export function composeDPlus1View(dPlus1) {
   const dateIso = toIsoDate(dPlus1);
-  const w = weekdayRu(dPlus1); // Mon=0..Sun=6 — родной день расписания
+  const override = loadDay(toIsoDate(addDays(dPlus1, -1))); // DayTasks(D), где D = (D+1)-1
+
+  // ⚠️ Поведение «экрана»: наличие оверрайда (даже пустого) полностью определяет список задач
+  if (override) {
+    const tasks = (override.tasks || []).map(t =>
+      new Task({ id: t.id, title: t.title, minutes: t.minutes, progress: t.progress, closed: t.closed, unloadDays: null })
+    );
+    return { dateIso, tasks };
+  }
+
+  // Нет оверрайда — чистое расписание
+  const w = weekdayRu(dPlus1);
   const schedule = loadSchedule();
   const base = schedule.list(w).map(t => new Task(t));
-  const override = loadDay(toIsoDate(addDays(dPlus1, -1))); // DayTasks(D) где D = (D+1)-1
-
-  // ⬇️ ЯВНАЯ ОЧИСТКА ДНЯ: если оверрайд существует и пустой — показать пустой список
-  if (override && Array.isArray(override.tasks) && override.tasks.length === 0) {
-    return { dateIso, tasks: [] };
-  }
-
-  if (!override) {
-    return { dateIso, tasks: base };
-  }
-
-  const map = new Map(base.map(t => [t.id, t]));
-  for (const o of override.tasks) {
-    const b = map.get(o.id);
-    if (b) {
-      b.title = o.title;
-      b.minutes = o.minutes;
-      b.progress = o.progress;
-      b.closed = o.closed;
-    } else {
-      // В override(D) есть задача, которой нет в schedule(w) — добавляем как есть (редкий случай)
-      map.set(o.id, new Task({ id:o.id, title:o.title, minutes:o.minutes, progress:o.progress, closed:o.closed, unloadDays:null }));
-    }
-  }
-  return { dateIso, tasks: Array.from(map.values()) };
+  return { dateIso, tasks: base };
 }
-

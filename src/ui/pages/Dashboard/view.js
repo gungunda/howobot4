@@ -88,7 +88,6 @@ export class DashboardView{
       </div>
       <div class="form-actions">
         <button class="btn primary" data-save>Добавить</button>
-        <button class="btn ghost" data-cancel>Отмена</button>
       </div>
     `;
     openModal(node, {
@@ -115,11 +114,11 @@ export class DashboardView{
         <input data-f-min type="number" min="0" step="5" value="${t.minutes}" />
       </div>
       <div class="form-actions">
+        <button class="btn btn-danger" data-delete>Удалить</button>
         <button class="btn primary" data-save>Сохранить</button>
-        <button class="btn ghost" data-cancel>Отмена</button>
       </div>
     `;
-    openModal(node, {
+    const close = openModal(node, {
       onSave: () => {
         const title = (node.querySelector('[data-f-title]')?.value || "").trim();
         const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
@@ -127,6 +126,10 @@ export class DashboardView{
         this.h.onEditSave(t.id, title, minutes);
       }
     });
+    node.querySelector("[data-delete]")?.addEventListener("click", () => {
+      this.h.onDelete(t.id);
+      close();
+    }, { once: true });
   }
 
   /** Карточка основной задачи (без инлайнового редактирования минут). */

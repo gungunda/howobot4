@@ -14,6 +14,7 @@ import { DashboardView } from "./view.js";
 import { config } from "../../../config.js";
 import { AddDayTask } from "../../../usecases/AddDayTask.js";
 import { EditDayTask } from "../../../usecases/EditDayTask.js";
+import { DropDayTask } from "../../../usecases/DropDayTask.js";
 
 export class DashboardPresenter {
   /** @param {HTMLElement} sectionRoot */
@@ -51,12 +52,12 @@ export class DashboardPresenter {
       onToggle: (taskId) => this.onToggle(taskId),
 
       onResetDay: () => this.onResetDay(),
-
       onResetToSchedule: () => this.onResetToSchedule(),
 
       // модалки
       onAddSave: (title, minutes) => this.onAddSave(title, minutes),
       onEditSave: (taskId, title, minutes) => this.onEditSave(taskId, title, minutes),
+      onDelete: (taskId) => this.onDelete(taskId),
 
       // оффлоад
       onOffloadStep: (taskId, targetIso, sign) => this.onOffloadStep(taskId, targetIso, sign),
@@ -113,6 +114,12 @@ export class DashboardPresenter {
     this.refresh();
   }
 
+  /** Удалить задачу из DayTasks(сегодня). */
+  onDelete(taskId){
+    DropDayTask({ date: this.todayIso, taskId });
+    this.refresh();
+  }
+
   /** Оффлоад — шаг ±10%. */
   onOffloadStep(taskId, targetIso, sign){
     SetProgress({ date: targetIso, taskId, delta: sign * config.progressStep });
@@ -125,5 +132,6 @@ export class DashboardPresenter {
     this.refresh();
   }
 }
+
 
 
