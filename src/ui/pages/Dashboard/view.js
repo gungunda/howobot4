@@ -28,10 +28,11 @@ export class DashboardView{
     const { dateIso, vm } = this.h;
 
     if (this.els.dateEl) this.els.dateEl.textContent = `(${dateIso})`;
-    this.els.stats.planned.textContent = vm.metrics.load;
-    this.els.stats.done.textContent    = vm.metrics.done;
-    this.els.stats.left.textContent    = vm.metrics.left;
-    this.els.stats.eta.textContent     = vm.metrics.finish;
+    this.els.stats.planned.textContent = vm.metrics.load || "0:00";
+    this.els.stats.done.textContent    = vm.metrics.done ?? "0%";
+    this.els.stats.left.textContent    = vm.metrics.left || "0:00";
+    // ETA может называться finish — поддержим оба поля
+    this.els.stats.eta.textContent     = vm.metrics.eta || vm.metrics.finish || "0:00";
 
     // Кнопка «Очистить день»
     if (this.els.resetBtn){
@@ -71,9 +72,7 @@ export class DashboardView{
     this.els.list.parentElement.appendChild(btn);
   }
 
-  /**
-   * Открыть модалку для добавления новой задачи в сегодня.
-   */
+  /** Открыть модалку для добавления новой задачи в сегодня. */
   openAddForm(){
     const node = document.createElement("div");
     node.innerHTML = `
@@ -101,10 +100,7 @@ export class DashboardView{
     });
   }
 
-  /**
-   * Открыть модалку для редактирования существующей задачи.
-   * @param {object} t - задача (id,title,minutes,progress,...)
-   */
+  /** Открыть модалку для редактирования существующей задачи. */
   openEditForm(t){
     const node = document.createElement("div");
     node.innerHTML = `
@@ -132,7 +128,7 @@ export class DashboardView{
     });
   }
 
-  /** Карточка основной задачи (без инлайнового редактирования минут). */
+  /** Карточка основной задачи. */
   renderTaskCard(t){
     const card = document.createElement("div");
     card.className = "card";
