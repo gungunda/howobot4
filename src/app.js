@@ -40,12 +40,18 @@ const calendar  = new CalendarPresenter(views.calendar, {
 document.querySelectorAll("[data-nav]").forEach(btn => {
   btn.addEventListener("click", () => {
     const route = btn.getAttribute("data-nav");
+
+    // Если клик по «Сегодня» — сбрасываем дашборд на текущую дату
+    if (route === "dashboard") {
+      dashboard.baseDate = date.today();
+    }
+
     show(route);
     render(route);
   });
 });
 
-// кнопка «сегодня» (если присутствует в разметке)
+// (опционально) отдельная кнопка «сегодня», если присутствует в разметке
 document.querySelector('[data-action="today"]')?.addEventListener('click', () => {
   const t = date.today();
   dashboard.baseDate = t;
