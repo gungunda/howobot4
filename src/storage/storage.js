@@ -75,9 +75,35 @@ export function loadDay(dateIso) {
   } catch { return null; }
 }
 
-/** Убедиться, что DayTasks существует (иначе создать пустой). */
+/**
+ * Убедиться, что DayTasks(D) существует.
+ * Если нет — создаём оверрайд как ПОЛНЫЙ КЛОН расписания для R = D+1,
+ * чтобы DayTasks сразу стал «источником истины».
+ */
 export function ensureDay(dateIso) {
-  return loadDay(dateIso) || DayTasks.create(toIsoDate(new Date(dateIso)));
+  const existing = loadDay(dateIso);
+  if (existing) return existing;
+
+  const iso = toIsoDate(new Date(dateIso));
+  const d = new Date(iso);
+  const rDate = addDays(d, 1);              // R = D+1
+  const r = weekdayRu(rDate);               // Пн=0..Вс=6
+  const schedule = loadSchedule();
+  const base = schedule.list(r) || [];
+
+  const day = DayTasks.create(iso);
+  for (const t of base) {
+    // Клонируем как Task, чтобы «срезать» unloadDays и прочие поля в формате DayTasks
+    day.addTask(new Task({
+      id: t.id,
+      title: t.title,
+      minutes: t.minutes,
+      progress: t.progress,
+      closed: t.closed,
+      unloadDays: null
+    }));
+  }
+  return day;
 }
 
 /** Удалить оверрайд дня (полностью). */
@@ -140,7 +166,7 @@ export function composeDPlus1View(dPlus1) {
   const dateIso = toIsoDate(dPlus1);
   const override = loadDay(toIsoDate(addDays(dPlus1, -1))); // DayTasks(D), где D = (D+1)-1
 
-  // ⚠️ Поведение «экрана»: наличие оверрайда (даже пустого) полностью определяет список задач
+  // Наличие оверрайда (даже пустого) полностью определяет список задач
   if (override) {
     const tasks = (override.tasks || []).map(t =>
       new Task({ id: t.id, title: t.title, minutes: t.minutes, progress: t.progress, closed: t.closed, unloadDays: null })

@@ -1,3 +1,4 @@
+// /src/app.js
 /**
  * Точка входа. Навигация по data-* и инициализация presenters.
  */
@@ -15,14 +16,12 @@ const views = {
 };
 
 function show(route){
-  Object.values(views).forEach(el => el.classList.remove("is-active"));
-  (views[route] || views.dashboard).classList.add("is-active");
-  render(route);
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('is-active'));
+  const el = route === "schedule" ? views.schedule
+    : route === "calendar" ? views.calendar
+    : views.dashboard;
+  el?.classList.add('is-active');
 }
-
-document.querySelectorAll('[data-nav]').forEach(btn => {
-  btn.addEventListener('click', () => show(btn.dataset.nav));
-});
 
 initStorage();
 cleanupOldDays(config.daysToKeep);
@@ -31,18 +30,29 @@ const dashboard = new DashboardPresenter(views.dashboard);
 const schedule  = new SchedulePresenter(views.schedule);
 const calendar  = new CalendarPresenter(views.calendar, {
   onSelectDate: (iso) => {
-    dashboard.baseDate = new Date(iso);
+    dashboard.baseDate = date.fromIsoLocal(iso);
     show("dashboard");
-    dashboard.render();
+    render("dashboard");
   }
 });
 
+// верхняя навигация
+document.querySelectorAll("[data-nav]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const route = btn.getAttribute("data-nav");
+    show(route);
+    render(route);
+  });
+});
+
+// кнопка «сегодня» (если присутствует в разметке)
 document.querySelector('[data-action="today"]')?.addEventListener('click', () => {
   const t = date.today();
   dashboard.baseDate = t;
   schedule.baseDate = t;
   calendar.baseDate = t;
-  render(currentRoute);
+  show("dashboard");
+  render("dashboard");
 });
 
 let currentRoute = "dashboard";
@@ -55,7 +65,8 @@ function render(route){
   }
 }
 
+// старт: показать и отрисовать дашборд
 show("dashboard");
+render("dashboard");
+
 window.__planner = { date };
-
-

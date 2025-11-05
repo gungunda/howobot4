@@ -1,9 +1,13 @@
 
 /** Утилиты работы с датами (защищены от строк/таймстампов). */
 
-function asDate(d = new Date()) {
-  if (d instanceof Date) return d;
-  // Строка "YYYY-MM-DD" или любое, что понимает Date
+export function asDate(d = new Date()) {
+  if (d instanceof Date) return new Date(d.getTime());
+  if (typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d)) {
+    const [y,m,dd] = d.split("-").map(Number);
+    return new Date(y, m - 1, dd, 0, 0, 0, 0); // локальная полуночь, без UTC-сдвига
+  }
+  // Любое, что понимает Date (таймстамп, ISO с временем и т.п.)
   return new Date(d);
 }
 
@@ -36,8 +40,7 @@ export function minutesToHhmm(mins) {
 }
 export function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
-/** Нумерация дней недели */
-export function weekdayEn(d = today()) { return asDate(d).getDay(); }
+export function weekdayEn(d = today()) { return asDate(d).getDay(); } // 0..6, Вс=0
 export function weekdayRu(d = today()) { return (weekdayEn(d) + 6) % 7; }
 export const weekday = weekdayRu;
 
@@ -82,7 +85,9 @@ export function timeHhmm(d = today()) {
 }
 export function monthLabel(d) { const x = asDate(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,"0")}`; }
 
-/** Найти ближайшую дату вперёд с заданным днём недели (Пн=0..Вс=6). */
+/** Разбор строки 'YYYY-MM-DD' как локальной даты (экспортируемая функция). */
+export function fromIsoLocal(s) { return asDate(s); }
+
 export function nextDateWithWeekdayMon0(fromDate, weekdayMon0, includeToday = false) {
   const start = copy(fromDate);
   if (!includeToday) start.setDate(start.getDate() + 1);
@@ -94,5 +99,6 @@ export function nextDateWithWeekdayMon0(fromDate, weekdayMon0, includeToday = fa
   }
   return cur;
 }
+
 
 
