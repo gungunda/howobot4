@@ -158,10 +158,10 @@ export function composeDPlus1View(dPlus1) {
   for (const o of override.tasks) {
     const b = map.get(o.id);
     if (b) {
+      b.title = o.title;
       b.minutes = o.minutes;
       b.progress = o.progress;
       b.closed = o.closed;
-      // title оставляем из расписания; переименование — отдельный usecase
     } else {
       // В override(D) есть задача, которой нет в schedule(w) — добавляем как есть (редкий случай)
       map.set(o.id, new Task({ id:o.id, title:o.title, minutes:o.minutes, progress:o.progress, closed:o.closed, unloadDays:null }));
