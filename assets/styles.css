@@ -16,6 +16,8 @@
 --------------------------------------- */
 @layer tokens {
   :root{
+    color-scheme: light dark; /* подсказка UA для корректных системных цветов/скроллбаров */
+
     /* Цвета */
     --bg: #ffffff;
     --fg: #1f2328;
@@ -83,6 +85,9 @@
     color: var(--fg);
     line-height: 1.5;
     padding-inline: clamp(12px, 4vw, 24px);
+    /* Safe areas по странице */
+    padding-block-start: max(var(--s-4), env(safe-area-inset-top));
+    padding-block-end: max(var(--s-4), env(safe-area-inset-bottom));
   }
 
   /* Доступный фокус */
@@ -94,6 +99,12 @@
   /* Утилиты типографики */
   .muted { color: var(--muted); }
   .small { font-size: var(--fs-sm); }
+
+  /* CLS-хелперы для медиа */
+  .media { display:block; width:100%; height:auto; }
+  .media-16x9 { aspect-ratio: 16 / 9; }
+  .media-4x3  { aspect-ratio: 4 / 3; }
+  .media-1x1  { aspect-ratio: 1 / 1; }
 }
 
 /* ---------------------------------------
@@ -103,10 +114,12 @@
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
     gap: var(--s-3);
-    padding: var(--s-3) var(--s-4);
+    padding: max(var(--s-3), env(safe-area-inset-top)) var(--s-4) var(--s-3); /* safe-area сверху */
     border-bottom: 1px solid var(--border);
     background: var(--bg);
     position: sticky; top: 0; z-index: 10;
+    /* предотвращаем «пробивание» скроллом из модалок */
+    overscroll-behavior: contain;
   }
   .topbar-title{ font-weight:600; font-size: var(--fs-lg); }
   .topbar-nav{ display:flex; gap: var(--s-2); flex-wrap: wrap; }
@@ -157,6 +170,7 @@
 
   .footer{
     padding: var(--s-3) var(--s-4);
+    padding-bottom: max(var(--s-3), env(safe-area-inset-bottom)); /* safe-area снизу */
     border-top:1px solid var(--border);
     max-width: 42rem;
     margin-inline: auto;
@@ -265,15 +279,12 @@
   :where(.input, input, select, textarea):disabled{
     opacity:.7; background: #f3f4f6; cursor:not-allowed;
   }
-  /* Устраняем неожиданный зум на iOS — размер текста уже ≥16px */
 
-  /* Диапазоны/слайдеры (fallback без кастомного трека) */
   .range{
     inline-size: min(100%, 20rem);
     block-size: auto;
   }
 
-  /* Валидация (не агрессивная) */
   .is-invalid{ border-color:#f59e0b; }
   .help-text{ color: var(--muted); font-size: var(--fs-sm); margin-top: .25rem; }
 
@@ -334,9 +345,6 @@
     position: sticky; bottom: 0; padding-top: var(--s-3);
     background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0));
   }
-
-  /* Dashboard add button */
-  .dashboard-add { margin-top: var(--s-3); }
 }
 
 /* ---------------------------------------
