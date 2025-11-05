@@ -104,15 +104,15 @@
     position: sticky; top: 0; z-index: 10;
   }
   .topbar-title{ font-weight:600; font-size: var(--fs-lg); }
-  .topbar-nav{ display:flex; gap: var(--s-2); }
-  .topbar-date{ display:flex; gap: var(--s-2); }
+  .topbar-nav{ display:flex; gap: var(--s-2); flex-wrap: wrap; }
 
-  /* Центральный контент — ограничиваем ширину и центрируем */
+  /* Центральный контент — ограничиваем ширину и центрируем; делаем его container */
   .main{
     padding-block: var(--s-4);
     max-width: 42rem;            /* ≈ 672px */
     margin-inline: auto;
     width: 100%;
+    container-type: inline-size; /* для @container-правил ниже */
   }
 
   .section{ margin-block: var(--s-4); }
@@ -138,7 +138,7 @@
 
   .task-list{ display:flex; flex-direction:column; gap: var(--s-2); }
 
-  /* Сетка недели — 1 → 2 → 3 колонки по контенту */
+  /* Сетка недели — дефолт через viewport (fallback) */
   .week-grid{ display:grid; grid-template-columns: repeat(1, 1fr); gap: var(--s-3); }
   @media (min-width: 720px){ .week-grid{ grid-template-columns: repeat(2, 1fr); } }
   @media (min-width: 1024px){ .week-grid{ grid-template-columns: repeat(3, 1fr); } }
@@ -156,6 +156,32 @@
     max-width: 42rem;
     margin-inline: auto;
     width: 100%;
+  }
+
+  /* ---------- Контентные брейки через container queries ---------- */
+  @supports (container-type: inline-size) {
+    /* week-grid 1→2→3 колонок в зависимости от ширины .main, а не всего вьюпорта */
+    @container (min-width: 40rem) {
+      .week-grid{ grid-template-columns: repeat(2, 1fr); }
+    }
+    @container (min-width: 64rem) {
+      .week-grid{ grid-template-columns: repeat(3, 1fr); }
+    }
+
+    /* статистика: 1→2→3 карточки в ряд по мере расширения контейнера */
+    @container (min-width: 30rem) {
+      .stat-box{ flex: 1 1 calc(33.333% - var(--s-3)); }
+    }
+    @container (min-width: 48rem) {
+      .stat-box{ flex: 1 1 calc(25% - var(--s-3)); min-width: 10rem; }
+    }
+  }
+
+  /* Узкие экраны (safety tweaks) */
+  @media (max-width: 360px) {
+    .topbar { padding-inline: var(--s-3); }
+    .calendar-grid { gap: var(--s-1); }
+    .calendar-grid .cell { padding: 0.5rem; }
   }
 }
 
@@ -262,6 +288,11 @@
 @layer utilities {
   .topbar-title{ font-weight:600; }
   .section-title{ font-weight:600; }
+
+  /* Предпочтение сниженной анимации (на будущее) */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  }
 }
 
 
