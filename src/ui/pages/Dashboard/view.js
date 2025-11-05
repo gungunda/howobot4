@@ -66,6 +66,7 @@ export class DashboardView{
     const btn = document.createElement("button");
     btn.className = "btn primary dashboard-add";
     btn.textContent = "+";
+    btn.title = "Добавить задачу на сегодня";
     btn.addEventListener("click", () => this.openAddForm());
 
     // Вставляем сразу после списка
@@ -85,19 +86,17 @@ export class DashboardView{
         <label>Минуты</label>
         <input data-f-min type="number" min="0" step="5" value="25" />
       </div>
-      <div class="actions">
-        <button class="btn" data-f-save>Добавить</button>
-        <button class="btn btn-muted" data-f-cancel>Отмена</button>
+      <div class="form-actions">
+        <button class="btn primary" data-save>Добавить</button>
+        <button class="btn ghost" data-cancel>Отмена</button>
       </div>
     `;
     openModal(node, {
-      onMount: () => {
-        node.querySelector('[data-f-save]')?.addEventListener('click', () => {
-          const title = (node.querySelector('[data-f-title]')?.value || "").trim();
-          const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
-          if (!title) return; // простая валидация
-          this.h.onAddSave(title, minutes);
-        });
+      onSave: () => {
+        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+        if (!title) return; // простая валидация
+        this.h.onAddSave(title, minutes);
       }
     });
   }
@@ -115,23 +114,20 @@ export class DashboardView{
         <label>Минуты</label>
         <input data-f-min type="number" min="0" step="5" value="${t.minutes}" />
       </div>
-      <div class="actions">
-        <button class="btn" data-f-save>Сохранить</button>
-        <button class="btn btn-muted" data-f-cancel>Отмена</button>
+      <div class="form-actions">
+        <button class="btn primary" data-save>Сохранить</button>
+        <button class="btn ghost" data-cancel>Отмена</button>
       </div>
     `;
     openModal(node, {
-      onMount: () => {
-        node.querySelector('[data-f-save]')?.addEventListener('click', () => {
-          const title = (node.querySelector('[data-f-title]')?.value || "").trim();
-          const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
-          if (!title) return;
-          this.h.onEditSave(t.id, title, minutes);
-        });
+      onSave: () => {
+        const title = (node.querySelector('[data-f-title]')?.value || "").trim();
+        const minutes = Number(node.querySelector('[data-f-min]')?.value || 0);
+        if (!title) return;
+        this.h.onEditSave(t.id, title, minutes);
       }
     });
   }
-
 
   /** Карточка основной задачи (без инлайнового редактирования минут). */
   renderTaskCard(t){
@@ -184,5 +180,4 @@ export class DashboardView{
     return card;
   }
 }
-
 
