@@ -21,8 +21,12 @@
     --fg: #1f2328;
     --muted: #6a737d;
     --primary: #0b5fff;
+    --primary-contrast: #ffffff;
+    --danger: #ef4444;
+    --danger-contrast: #ffffff;
     --border: #e2e8f0;
     --card: #f8fafc;
+    --focus-ring: rgba(11,95,255,.5);
 
     /* Типографика */
     --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -62,6 +66,7 @@
       --border: #2a3542;
       --card: #11161d;
       --primary: #3b82f6;
+      --focus-ring: rgba(59,130,246,.5);
     }
   }
 }
@@ -186,39 +191,93 @@
 }
 
 /* ---------------------------------------
-   COMPONENTS
+   COMPONENTS (доводка под мобайл)
 --------------------------------------- */
 @layer components {
+  /* ---------- Buttons ---------- */
   .btn{
-    padding: 0.375rem 0.625rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5em;
+    padding: 0.5rem 0.75rem;              /* больше тач-зона */
     border:1px solid var(--border);
     background:#fff;
     border-radius: var(--r-2);
     cursor:pointer;
     font-size: var(--fs-md);
     line-height: 1.2;
-    min-height: 2.75rem; /* ≥ ~44px */
+    min-height: 2.75rem;                  /* ≥ ~44px */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: box-shadow .15s ease, transform .05s ease;
   }
+  .btn:where(:hover){ box-shadow: 0 1px 0 rgba(0,0,0,.06); }
+  .btn:where(:active){ transform: translateY(1px); }
   .btn:disabled{ opacity:.6; cursor: not-allowed; }
-  .btn-danger{ color:#fff; background:#ef4444; border-color:#ef4444; }
-  .btn.primary { background: #2d7ef7; color: #fff; border: none; }
-  .btn.ghost { background: transparent; border: 1px solid #bbb; }
 
-  .input{
-    padding: 0.375rem 0.5rem;
+  .btn.primary {
+    background: var(--primary);
+    color: var(--primary-contrast);
+    border-color: transparent;
+  }
+  .btn.ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+  }
+  .btn-danger{
+    color: var(--danger-contrast);
+    background: var(--danger);
+    border-color: var(--danger);
+  }
+  .btn.full { inline-size: 100%; }
+
+  .btn-group{ display:flex; flex-wrap:wrap; gap: var(--s-2); }
+  .btn-icon{ inline-size: 1.25em; block-size: 1.25em; display:inline-block; }
+
+  /* Фокус-обводка повышенного контраста */
+  .btn:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* ---------- Inputs & Form Controls ---------- */
+  .input,
+  input[type="text"],
+  input[type="number"],
+  input[type="search"],
+  input[type="time"],
+  select, textarea{
+    padding: 0.5rem 0.625rem;
     border:1px solid var(--border);
     border-radius: var(--r-1);
     min-height: 2.75rem;
     font-size: var(--fs-md);
     inline-size: 100%;
+    background: #fff;
   }
+  input::placeholder, textarea::placeholder{ color: var(--muted); }
+  :where(.input, input, select, textarea):focus-visible{
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-color: var(--primary);
+  }
+  :where(.input, input, select, textarea):disabled{
+    opacity:.7; background: #f3f4f6; cursor:not-allowed;
+  }
+  /* Устраняем неожиданный зум на iOS — размер текста уже ≥16px */
 
-  /* БЫЛО: фикс 180px. Становится адаптивным в контейнерах. */
+  /* Диапазоны/слайдеры (fallback без кастомного трека) */
   .range{
-    inline-size: min(100%, 20rem);  /* ≤ 320px, иначе 100% */
+    inline-size: min(100%, 20rem);
     block-size: auto;
   }
 
+  /* Валидация (не агрессивная) */
+  .is-invalid{ border-color:#f59e0b; }
+  .help-text{ color: var(--muted); font-size: var(--fs-sm); margin-top: .25rem; }
+
+  /* ---------- Cards ---------- */
   .card{
     border:1px solid var(--border);
     background: var(--card);
@@ -227,14 +286,17 @@
     margin-block: var(--s-2);
     box-shadow: var(--shadow-1);
   }
+  .card-title{ font-weight:600; margin: 0 0 var(--s-2); font-size: var(--fs-md); }
+  .card-actions{ display:flex; gap: var(--s-2); flex-wrap: wrap; }
 
-  /* === Calendar cells === */
+  /* ---------- Calendar cells ---------- */
   .calendar-grid .cell{
     display:flex; align-items:center; justify-content:center;
     padding: 0.625rem;
     border:1px solid var(--border); border-radius: var(--r-3);
     background:#fff; cursor:pointer; user-select:none;
     min-height: 2.625rem;
+    transition: box-shadow .15s ease;
   }
   .calendar-grid .cell.is-head{
     background:transparent; border:none; font-weight:600; color:var(--muted); cursor:default;
@@ -244,7 +306,7 @@
   .calendar-grid .cell.is-selected{ background:var(--card); border-color:var(--primary); }
   .calendar-grid .cell:hover{ box-shadow:0 0 0 2px rgba(0,0,0,.04); }
 
-  /* ===== Modal overlay ===== */
+  /* ---------- Modal ---------- */
   .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; }
   .modal[open] { display: flex; }
   .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
@@ -257,6 +319,7 @@
     border-radius: var(--r-3);
     box-shadow: var(--shadow-2);
     padding: var(--s-4);
+    padding-bottom: max(var(--s-4), env(safe-area-inset-bottom)); /* safe-area */
   }
   .modal-close {
     position: absolute; top: var(--s-2); right: var(--s-2);
@@ -266,17 +329,11 @@
   .form-row { display: flex; gap: var(--s-2); align-items: center; margin: var(--s-2) 0; }
   .form-row label { min-width: 6rem; }
   .form-row .unload-grid label { min-width: 0; }
-  .form-row input[type="text"],
-  .form-row input[type="number"] {
-    flex: 1;
-    padding: 0.375rem 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: var(--r-1);
-    min-height: 2.75rem;
-    font-size: var(--fs-md);
-    inline-size: 100%;
+  .form-actions {
+    display: flex; gap: var(--s-2); justify-content: flex-end; margin-top: var(--s-3);
+    position: sticky; bottom: 0; padding-top: var(--s-3);
+    background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0));
   }
-  .form-actions { display: flex; gap: var(--s-2); justify-content: flex-end; margin-top: var(--s-3); }
 
   /* Dashboard add button */
   .dashboard-add { margin-top: var(--s-3); }
@@ -289,9 +346,21 @@
   .topbar-title{ font-weight:600; }
   .section-title{ font-weight:600; }
 
-  /* Предпочтение сниженной анимации (на будущее) */
+  /* Скрыть элемент визуально, оставить для скринридеров */
+  .sr-only{
+    position:absolute !important; inline-size:1px !important; block-size:1px !important;
+    padding:0 !important; margin:-1px !important; overflow:hidden !important; clip:rect(0,0,0,0) !important;
+    white-space:nowrap !important; border:0 !important;
+  }
+
+  /* Предпочтение сниженной анимации */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
