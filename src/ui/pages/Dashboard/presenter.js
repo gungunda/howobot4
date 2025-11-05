@@ -6,7 +6,7 @@
 import * as date from "../../../utils/date.js";
 import { LoadDashboard } from "../../../usecases/LoadDashboard.js";
 import { SetProgress } from "../../../usecases/SetProgress.js";
-import { SetMinutes } from "../../../usecases/SetMinutes.js";
+
 import { ToggleClosed } from "../../../usecases/ToggleClosed.js";
 import { ResetDay } from "../../../usecases/ResetDay.js";
 import { DashboardView } from "./view.js";
@@ -46,7 +46,7 @@ export class DashboardPresenter {
       onStep: (taskId, sign) => this.onStep(taskId, sign),
       onSlide: (taskId, value) => this.onSlide(taskId, value),
       onToggle: (taskId) => this.onToggle(taskId),
-      onSetMinutes: (taskId, minutes) => this.onSetMinutes(taskId, minutes),
+
       onResetDay: () => this.onResetDay(),
 
       // модалки
@@ -86,12 +86,6 @@ export class DashboardPresenter {
   }
 
   /** Основные задачи — смена минут. */
-  onSetMinutes(taskId, minutes){
-    const d = date.addDays(date.dPlus1(this.baseDate), -1);
-    SetMinutes({ taskId, minutes: Number(minutes), date: date.toIsoDate(d) });
-    this.refresh();
-  }
-
   /** Очистка дня. */
   onResetDay(){
     const d = date.addDays(date.dPlus1(this.baseDate), -1);
@@ -125,7 +119,4 @@ export class DashboardPresenter {
     this.refresh();
   }
 }
-
-
-
 
