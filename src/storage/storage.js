@@ -133,14 +133,22 @@ export function ensureDayTask(dateIso, taskId){
  * Композиция для экрана D+1:
  *  - base: задачи из расписания для weekdayRu(D+1)
  *  - override: DayTasks(D) как патчи по id (minutes/progress/closed; title правится отдельным usecase)
- * Возвращает { dateIso (D+1 ISO), tasks: Task[] } — уже после слияния.
+ * Возвращает { dateIso (D+1 ISO), tasks: Task[] }.
+ *
+ * Новая логика: если override(D) существует и ПУСТОЙ, считаем, что пользователь очистил день —
+ * возвращаем пустой список задач (видимый список пуст).
  */
 export function composeDPlus1View(dPlus1) {
   const dateIso = toIsoDate(dPlus1);
-  const w = weekdayRu(dPlus1); // Mon=0..Sun=6 — это родной день
+  const w = weekdayRu(dPlus1); // Mon=0..Sun=6 — родной день расписания
   const schedule = loadSchedule();
   const base = schedule.list(w).map(t => new Task(t));
   const override = loadDay(toIsoDate(addDays(dPlus1, -1))); // DayTasks(D) где D = (D+1)-1
+
+  // ⬇️ ЯВНАЯ ОЧИСТКА ДНЯ: если оверрайд существует и пустой — показать пустой список
+  if (override && Array.isArray(override.tasks) && override.tasks.length === 0) {
+    return { dateIso, tasks: [] };
+  }
 
   if (!override) {
     return { dateIso, tasks: base };
@@ -153,9 +161,9 @@ export function composeDPlus1View(dPlus1) {
       b.minutes = o.minutes;
       b.progress = o.progress;
       b.closed = o.closed;
-      // title не трогаем — он из расписания; rename — отдельный usecase
+      // title оставляем из расписания; переименование — отдельный usecase
     } else {
-      // Задача есть в override(D), но отсутствует в schedule(w) — добавим как есть (редкий случай)
+      // В override(D) есть задача, которой нет в schedule(w) — добавляем как есть (редкий случай)
       map.set(o.id, new Task({ id:o.id, title:o.title, minutes:o.minutes, progress:o.progress, closed:o.closed, unloadDays:null }));
     }
   }
