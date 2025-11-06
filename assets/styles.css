@@ -149,7 +149,7 @@
     background: var(--card);
     box-shadow: var(--shadow-1);
     flex: 1 1 calc(50% - var(--s-3));
-    min-width: 12rem;
+    min-width: 7rem;
   }
 
   .view{ display:none; }
@@ -383,7 +383,7 @@
 
 
 
-@layer layout { .row.between{ justify-content: space-between; } }
+@layer layout { .card-header{ justify-content: space-between; } }
 
 
 
@@ -394,6 +394,37 @@
     flex: 1 1 auto;
     min-inline-size: 0;
   }
+}
+
+
+
+/* === Stats cards: uniform layout (1col → 2col → 4col) === */
+@layer layout {
+  /* Switch stats row to CSS Grid to avoid last-item stretching */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr); /* 4 в столбец (мобилка) */
+    gap: var(--s-3);
+  }
+  /* Neutralize previous flex sizing on stat boxes in grid context */
+  .stat-box {
+    flex: initial;
+    min-width: 0;
+  }
+}
+
+/* Fallback with media queries */
+@media (min-width: 600px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); } /* 2 + 2 */
+}
+@media (min-width: 960px) {
+  .stats-row { grid-template-columns: repeat(4, 1fr); } /* 4 в ряд */
+}
+
+/* Prefer container queries when available (main already has container-type) */
+@supports (container-type: inline-size) {
+  @container (min-width: 26rem) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+  @container (min-width: 48rem) { .stats-row { grid-template-columns: repeat(4, 1fr); } }
 }
 
 

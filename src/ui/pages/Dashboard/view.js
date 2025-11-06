@@ -122,7 +122,7 @@ export class DashboardView{
     card.className = "card";
     const hhmm = minutesToHhmm(t.minutes);
     card.innerHTML = `
-      <div class="row between">
+      <div class="row card-header">
         <strong class="card-title">${t.title}</strong>
         <strong class="card-title">${t.progress}% из ${hhmm}</strong>
       </div>
@@ -150,7 +150,7 @@ export class DashboardView{
     card.className = "card";
     const hhmm = minutesToHhmm(o.minutes);
     card.innerHTML = `
-      <div class="row between">
+      <div class="row card-header">
         <strong  class="card-title">${o.title} на  ${DAY_NAMES[o.fromWeekday]}</strong>
         <strong  class="card-title">${o.progress}% из ${hhmm}</strong>
       </div>
