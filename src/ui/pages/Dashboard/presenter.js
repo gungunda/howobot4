@@ -40,6 +40,7 @@ export class DashboardPresenter {
       list: this.root.querySelector('[data-dashboard-tasks]'),
       offloadWrap: this.root.querySelector('[data-dashboard-offload-wrapper]'),
       offloadList: this.root.querySelector('[data-dashboard-offload]'),
+      addBtn: this.root.querySelector('[data-action=\"add-task\"]'),
       resetBtn: this.root.querySelector('[data-action="reset-day"]'),
       resetToScheduleBtn: this.root.querySelector('[data-action="reset-to-schedule"]'),
     };
@@ -132,6 +133,8 @@ export class DashboardPresenter {
     this.refresh();
   }
 }
+
+
 
 
 

@@ -35,16 +35,14 @@ export class DashboardView{
     // ETA может называться finish — поддержим оба поля
     this.els.stats.eta.textContent     = vm.metrics.eta || vm.metrics.finish || "0:00";
 
-    // Кнопки «Очистить день» и «Вернуть к расписанию»
+    // Кнопки действий с задачами дня
     if (this.els.resetBtn){ this.els.resetBtn.onclick = () => this.h.onResetDay(); }
     if (this.els.resetToScheduleBtn){ this.els.resetToScheduleBtn.onclick = () => this.h.onResetToSchedule(); }
+    if (this.els.addBtn) { this.els.addBtn.onclick = () => this.openAddForm(); }
 
     // Список задач дня
     this.els.list.innerHTML = "";
     vm.tasks.forEach(t => this.els.list.appendChild(this.renderTaskCard(t)));
-
-    // Кнопка «+» под списком
-    this.injectAddButton();
 
     // Разгрузка
     if (this.els.offloadWrap){
@@ -57,23 +55,7 @@ export class DashboardView{
     }
   }
 
-  /** Вставить кнопку «+» под списком задач. */
-  injectAddButton(){
-    // Удалим прежнюю кнопку, если была
-    const prev = this.els.list.parentElement.querySelector(".dashboard-add");
-    if (prev) prev.remove();
-
-    const btn = document.createElement("button");
-    btn.className = "btn primary dashboard-add";
-    btn.textContent = "+";
-    btn.title = "Добавить задачу на сегодня";
-    btn.addEventListener("click", () => this.openAddForm());
-
-    // Вставляем сразу после списка
-    this.els.list.parentElement.appendChild(btn);
-  }
-
-  /** Открыть модалку для добавления новой задачи в сегодня. */
+    /** Открыть модалку для добавления новой задачи в сегодня. */
   openAddForm(){
     const node = document.createElement("div");
     node.innerHTML = `
@@ -183,4 +165,6 @@ export class DashboardView{
     return card;
   }
 }
+
+
 
