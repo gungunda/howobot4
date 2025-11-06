@@ -1,4 +1,5 @@
 import * as dt from "../../../utils/date.js";
+import { formatMonthName } from "../../../utils/locale.ru.js";
 
 const WEEK_HEAD = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
 
@@ -9,7 +10,7 @@ export class CalendarView {
   }
   render(){
     const base = this.h.baseDate;
-    this.els.label.textContent = `${dt.monthLabel(base)} → D+1: ${dt.toIsoDate(dt.dPlus1(base))}`;
+    this.els.label.textContent = formatMonthName(base);
 
     this.els.prev.onclick = () => this.h.onShiftMonth(-1);
     this.els.next.onclick = () => this.h.onShiftMonth(1);
@@ -49,5 +50,8 @@ export class CalendarView {
     this.els.grid.appendChild(frag);
   }
 }
+
+
+
 
 

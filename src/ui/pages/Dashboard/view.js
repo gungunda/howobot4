@@ -5,6 +5,7 @@
  * Инлайнового редактирования минут НЕТ — правка через модалку.
  */
 import { minutesToHhmm } from "../../../utils/date.js";
+import { formatDayMonth } from "../../../utils/locale.ru.js";
 import { ensureModalRoot, openModal } from "../../components/modal.js";
 
 const DAY_NAMES = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
@@ -28,7 +29,8 @@ export class DashboardView{
   render(){
     const { dateIso, vm } = this.h;
 
-    if (this.els.dateEl) this.els.dateEl.textContent = `(${dateIso})`;
+    if (this.els.dateEl) if (!this.els.dateEl) this.els.dateEl = this.root.querySelector("[data-dashboard-date]");
+    if (this.els.dateEl) this.els.dateEl.textContent = formatDayMonth(new Date(dateIso));
     this.els.stats.planned.textContent = vm.metrics.load || "0:00";
     this.els.stats.done.textContent    = vm.metrics.done ?? "0%";
     this.els.stats.left.textContent    = vm.metrics.left || "0:00";
@@ -59,14 +61,14 @@ export class DashboardView{
   openAddForm(){
     const node = document.createElement("div");
     node.innerHTML = `
-      <h3>Новая задача на сегодня</h3>
+      <h3>Новая задача</h3>
       <div class="form-row">
         <label>Название</label>
-        <input data-f-title placeholder="Предмет" />
+        <input data-f-title type="text" placeholder="Предмет или задача" />
       </div>
       <div class="form-row">
         <label>Минуты</label>
-        <input data-f-min type="number" min="0" step="5" value="25" />
+        <input data-f-min type="number" min="0" step="10" value="30" />
       </div>
       <div class="form-actions">
         <button class="btn primary" data-save>Добавить</button>
@@ -89,11 +91,11 @@ export class DashboardView{
       <h3>Правка задачи</h3>
       <div class="form-row">
         <label>Название</label>
-        <input data-f-title value="${t.title}" />
+        <input data-f-title  type="text" value="${t.title}" />
       </div>
       <div class="form-row">
         <label>Минуты</label>
-        <input data-f-min type="number" min="0" step="5" value="${t.minutes}" />
+        <input data-f-min type="number" min="0" step="10" value="${t.minutes}" />
       </div>
       <div class="form-actions">
         <button class="btn btn-danger" data-delete>Удалить</button>
@@ -148,9 +150,8 @@ export class DashboardView{
     const hhmm = minutesToHhmm(o.minutes);
     card.innerHTML = `
       <div class="row">
-        <strong>${o.title}</strong>
+        <strong>${o.title} на  ${DAY_NAMES[o.fromWeekday]}</strong>
         <span class="muted">${hhmm}</span>
-        <span class="muted">из дня: ${DAY_NAMES[o.fromWeekday]}</span>
       </div>
       <div class="row">
         <button class="btn" data-step="-1">−10%</button>
@@ -165,6 +166,10 @@ export class DashboardView{
     return card;
   }
 }
+
+
+
+
 
 
 

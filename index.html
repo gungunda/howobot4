@@ -6,24 +6,24 @@
       name="viewport"
       content="width=device-width, initial-scale=1, user-scalable=yes"
     />
-    <title>Лёшин планировщик</title>
+    <title>Планировщик ДЗ</title>
     <link rel="stylesheet" href="assets/styles.css" />
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
   </head>
   <body>
     <header class="topbar">
-      <div class="topbar-title">Лёшин планировщик</div>
+      <div class="topbar-title">План ДЗ</div>
       <nav class="topbar-nav">
         <button class="btn" data-nav="dashboard">Сегодня</button>
-        <button class="btn" data-nav="schedule">Расписание</button>
-        <button class="btn" data-nav="calendar">Календарь</button>
+        <button class="btn" data-nav="calendar"><img class="icon" src="./assets/icons/calendar.svg" alt="Календарь"></button>
+        <button class="btn" data-nav="schedule"><img class="icon" src="./assets/icons/gear.svg" alt="Расписание"></button>
       </nav>
     </header>
 
     <main class="main">
       <!-- DASHBOARD VIEW -->
       <section class="view is-active" data-view="dashboard">
-        <h2 class="section-title">Задачи на завтра <span data-dashboard-date></span></h2>
+        <h2 class="section-title">Задания на <span data-dashboard-date></span></h2>
         <div class="stats-row">
           <div class="stat-box">Нагрузка: <span data-dashboard-stat="planned">0:00</span></div>
           <div class="stat-box">Выполнено: <span data-dashboard-stat="done">0:00</span></div>
@@ -52,7 +52,7 @@
 
       <!-- SCHEDULE VIEW -->
       <section class="view" data-view="schedule">
-        <h2 class="section-title">Недельное расписание</h2>
+        <h2 class="section-title">Расписание недели</h2>
         <div class="week-grid" data-schedule-week></div>
       </section>
 
@@ -65,17 +65,20 @@
           <button class="btn" data-calendar-next>→</button>
         </div>
         <div class="calendar-grid" data-calendar-grid></div>
-        <div class="muted small">На дашборде всегда показывается D+1.</div>
+        <div class="muted small">Здесь нужно заполнять актуальное расписание уроков. День из расписания на дашборде всегда показывается в прешествующий день (дедлайн исполнения домашки).</div>
       </section>
     </main>
 
     <footer class="footer">
-      <small>v0.2 • MVP • localStorage</small>
+      <small>v0.3 • MVP • localStorage</small>
     </footer>
 
     <script type="module" src="src/app.js"></script>
   </body>
 </html>
+
+
+
 
 
 

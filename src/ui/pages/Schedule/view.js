@@ -4,6 +4,7 @@
  * В карточках предметов разгрузка показывается текстом, без чекбоксов.
  */
 import { minutesToHhmm } from "../../../utils/date.js";
+import { WEEKDAYS_FULL, WEEKDAYS_SHORT } from "../../../utils/locale.ru.js";
 import { ensureModalRoot, openModal } from "../../components/modal.js";
 
 const DAY = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
@@ -29,7 +30,7 @@ export class ScheduleView {
 
     const head = document.createElement("div");
     head.className = "row";
-    head.innerHTML = `<strong>${DAY[w]}</strong>`;
+    head.innerHTML = `<h3>${WEEKDAYS_FULL[w]}</h3>`;
 
     const addBtn = document.createElement("button");
     addBtn.className = "btn";
@@ -61,7 +62,7 @@ export class ScheduleView {
       </div>
       <div class="row">
         <span class="muted">Разгрузка: ${unloadTxt}</span>
-        <button class="btn" data-act="edit">Править</button>
+        <button class="btn" data-act="edit"><img  class="icon" src="./assets/icons/pencil.svg" alt="Редактировать"></button>
       </div>
     `;
 
@@ -78,14 +79,14 @@ export class ScheduleView {
   openAddForm(weekday){
     const node = document.createElement("div");
     node.innerHTML = `
-      <h3>Новый предмет — ${DAY[weekday]}</h3>
+      <h3>Новый предмет — ${WEEKDAYS_SHORT[weekday]}</h3>
       <div class="form-row">
         <label>Название</label>
         <input type="text" data-f-title placeholder="Введите название">
       </div>
       <div class="form-row">
         <label>Минуты</label>
-        <input type="number" min="0" step="5" data-f-min value="0">
+        <input type="number" min="0" step="10" data-f-min value="0">
       </div>
       <div class="form-row" data-unloads></div>
       <div class="form-actions">
@@ -110,7 +111,7 @@ export class ScheduleView {
   openEditForm(weekday, task){
     const node = document.createElement("div");
     node.innerHTML = `
-      <h3>Правка предмета — ${DAY[weekday]}</h3>
+      <h3>Правка предмета — ${WEEKDAYS_FULL[weekday]}</h3>
       <div class="form-row">
         <label>Название</label>
         <input type="text" data-f-title value="${task.title}">
@@ -188,5 +189,8 @@ export class ScheduleView {
     return out;
   }
 }
+
+
+
 
 
