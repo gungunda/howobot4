@@ -203,14 +203,14 @@
     align-items: center;
     justify-content: center;
     gap: .5em;
-    padding: 0.5rem 0.75rem;
+    padding: 0.35rem 0.5rem;
     border:1px solid var(--border);
     background:#fff;
     border-radius: var(--r-2);
     cursor:pointer;
     font-size: var(--fs-md);
     line-height: 1.2;
-    min-height: 2.75rem;
+    min-height: 2.25rem;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     transition: box-shadow .15s ease, transform .05s ease, background-color .15s ease;
