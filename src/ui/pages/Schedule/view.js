@@ -90,7 +90,7 @@ export class ScheduleView {
       </div>
       <div class="form-row" data-unloads></div>
       <div class="form-actions">
-        <button class="btn primary" data-save>Сохранить</button>
+        <button class="btn" data-save>Сохранить</button>
       </div>
     `;
 
@@ -122,8 +122,8 @@ export class ScheduleView {
       </div>
       <div class="form-row" data-unloads></div>
       <div class="form-actions">
-        <button class="btn btn-danger" data-delete>Удалить предмет</button>
-        <button class="btn primary" data-save>Сохранить</button>
+        <button class="btn" data-delete>Удалить предмет</button>
+        <button class="btn" data-save>Сохранить</button>
       </div>
     `;
 

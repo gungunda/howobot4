@@ -71,7 +71,7 @@ export class DashboardView{
         <input data-f-min type="number" min="0" step="10" value="30" />
       </div>
       <div class="form-actions">
-        <button class="btn primary" data-save>Добавить</button>
+        <button class="btn" data-save>Добавить</button>
       </div>
     `;
     openModal(node, {
@@ -98,8 +98,8 @@ export class DashboardView{
         <input data-f-min type="number" min="0" step="10" value="${t.minutes}" />
       </div>
       <div class="form-actions">
-        <button class="btn btn-danger" data-delete>Удалить</button>
-        <button class="btn primary" data-save>Сохранить</button>
+        <button class="btn" data-delete>Удалить</button>
+        <button class="btn" data-save>Сохранить</button>
       </div>
     `;
     const close = openModal(node, {
