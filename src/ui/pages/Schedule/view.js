@@ -30,7 +30,7 @@ export class ScheduleView {
 
     const head = document.createElement("div");
     head.className = "row";
-    head.innerHTML = `<h3>${WEEKDAYS_FULL[w]}</h3>`;
+    head.innerHTML = `<h3 class="day-title">${WEEKDAYS_FULL[w]}</h3>`;
 
     const addBtn = document.createElement("button");
     addBtn.className = "btn";

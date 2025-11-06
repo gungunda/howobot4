@@ -238,7 +238,7 @@
     min-height: 2.25rem;
     font-size: var(--fs-md);
     inline-size: 100%;
-    background: #fff;
+    background: var(--bg);
     transition: border-color .15s ease, box-shadow .15s ease;
   }
   input::placeholder, textarea::placeholder{ color: var(--muted); }
@@ -248,7 +248,7 @@
     border-color: var(--primary);
   }
   :where(.input, input, select, textarea):disabled{
-    opacity:.7; background: #f3f4f6; cursor:not-allowed;
+    opacity:.7; background: var(--bg); cursor:not-allowed;
   }
 
   /* ---------- Cards ---------- */
@@ -257,12 +257,15 @@
   .card-actions{ display:flex; gap: var(--s-2); flex-wrap: wrap;  justify-content: flex-start;   }
   .card-percents {margin: var(--s-1) 0; padding: var(--s-1) 0;}
 
+  /* ---------- Schedule ---------- */
+   .day-title{  margin: 0 0 var(--s-2); }
+
   /* ---------- Calendar cells ---------- */
   .calendar-grid .cell{
     display:flex; align-items:center; justify-content:center;
     padding: 0.5rem;
     border:1px solid var(--border); border-radius: var(--r-3);
-    background:#fff; cursor:pointer; user-select:none;
+    background:var(--bg); cursor:pointer; user-select:none;
     min-height: 2.75rem; /* было 2.625rem — довёл до ≥44px */
     transition: box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
   }
@@ -288,7 +291,7 @@
   .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
   .modal-card {
     position: relative;
-    background: #fff;
+    background: var(--bg);
     width: min(30rem, 92vw);
     max-height: 88dvh;
     overflow: auto;
