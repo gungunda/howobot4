@@ -134,6 +134,7 @@
 
   .main{
     padding-block: var(--s-4);
+    margin-top: calc(var(--s-6));
     max-width: 42rem;            /* ≈ 672px */
     margin-inline: auto;
     width: 100%;
@@ -452,5 +453,17 @@
   }
 }
 
+/* ---------- Fixed topbar overlay (keeps nav visible on scroll) ---------- */
+@layer layout {
+  .topbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: var(--bg);
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
 
+}
 
