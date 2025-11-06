@@ -309,7 +309,8 @@
   .form-actions {
     display: flex; gap: var(--s-2); justify-content: flex-end; margin-top: var(--s-3);
     position: sticky; bottom: 0; padding-top: var(--s-3);
-    background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0));
+    background: linear-gradient(to top, var(--bg), transparent);
+
   }
 }
 
