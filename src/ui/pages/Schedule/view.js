@@ -34,7 +34,7 @@ export class ScheduleView {
 
     const addBtn = document.createElement("button");
     addBtn.className = "btn";
-    addBtn.textContent = "+";
+    addBtn.innerHTML = `<img class="icon" src="./assets/icons/plus.svg" alt="Добавить">`;
     addBtn.title = "Добавить предмет";
     addBtn.addEventListener("click", () => this.openAddForm(w));
     head.appendChild(addBtn);
@@ -61,7 +61,7 @@ export class ScheduleView {
         <span class="muted">${hhmm}</span>
       </div>
       <div class="row">
-        <span class="muted">Разгрузка: ${unloadTxt}</span>
+        <span class="muted">Разгр.: ${unloadTxt}</span>
         <button class="btn" data-act="edit"><img  class="icon" src="./assets/icons/pencil.svg" alt="Редактировать"></button>
       </div>
     `;

@@ -415,4 +415,42 @@
 }
 
 
+/* ---------- Schedule (точное соответствие текущему HTML) ---------- */
+@layer components {
+  /* Шапка дня: название + плюс справа */
+  .week-grid .card > .row:first-child { justify-content: space-between; align-items: center; margin-bottom: var(--s-2);}
+
+  /* Отступы между строками предметов */
+  .week-grid .card > div > .row + .row { margin-block-start: var(--s-2); }
+
+  /* Строка предмета — двухколоночная раскладка */
+  .week-grid .card > div > .row {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+  }
+
+  /* Левая колонка (название + время) — тянется */
+  .week-grid .card > div > .row > .row:first-child {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  /* Правая колонка (разгрузка + кнопка) — прижать вправо, элементы в одну линию */
+  .week-grid .card > div > .row > .row:last-child {
+    margin-inline-start: auto;
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    flex: 0 0 auto;
+    min-inline-size: max-content;
+  }
+
+  /* Кнопка редактирования фиксированной ширины */
+  .week-grid .card > div > .row > .row:last-child > .btn {
+    flex: 0 0 auto;
+  }
+}
+
+
 
