@@ -111,7 +111,7 @@ export class ScheduleView {
   openEditForm(weekday, task){
     const node = document.createElement("div");
     node.innerHTML = `
-      <h3>Редактирование: ${WEEKDAYS_FULL[weekday]}</h3>
+      <h3>Правка: ${WEEKDAYS_FULL[weekday]}</h3>
       <div class="form-row">
         <label>Название</label>
         <input type="text" data-f-title value="${task.title}">

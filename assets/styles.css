@@ -443,7 +443,7 @@
     margin-inline-start: auto;
     display: flex;
     align-items: center;
-    gap: var(--s-1);
+    gap: var(--s-2);
     flex: 0 0 auto;
     min-inline-size: max-content;
   }
