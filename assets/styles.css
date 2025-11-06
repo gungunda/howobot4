@@ -121,7 +121,7 @@
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
     gap: var(--s-3);
-    padding: max(var(--s-3), env(safe-area-inset-top)) var(--s-4) var(--s-3);
+    padding: max(var(--s-2), env(safe-area-inset-top)) var(--s-1) var(--s-3);
     border-bottom: 1px solid var(--border);
     background: var(--bg);
     position: sticky; top: 0; z-index: 10;
@@ -141,16 +141,8 @@
   .section{ margin-block: var(--s-4); }
   .section-title{ margin: 0 0 var(--s-3); font-size: var(--fs-lg); }
 
-  .stats-row{ display:flex; gap: var(--s-3); flex-wrap:wrap; margin-block: var(--s-2); }
-  .stat-box{
-    padding: var(--s-1) var(--s-2);
-    border:1px solid var(--border);
-    border-radius: var(--r-2);
-    background: var(--card);
-    box-shadow: var(--shadow-1);
-    flex: 1 1 calc(50% - var(--s-3));
-    min-width: 7rem;
-  }
+  
+  .stat-box{ padding: var(--s-1) var(--s-2); border:1px solid var(--border); border-radius: var(--r-2); background: var(--card); box-shadow: var(--shadow-1); }
 
   .view{ display:none; }
   .view.is-active{ display:block; }
@@ -226,13 +218,10 @@
   .btn-danger  { color: var(--danger-contrast); background: var(--danger); border-color: var(--danger); }
   .btn.full    { inline-size: 100%; }
 
-  .btn-group{ display:flex; flex-wrap:wrap; gap: var(--s-2); }
-  .btn-icon{ inline-size: 1.25em; block-size: 1.25em; display:inline-flex; align-items:center; justify-content:center; }
 
   .btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
   .icon { width: 1.25em; height: 1.25em; vertical-align: -0.125em;  color: var(--muted); }
-
 
   /* ---------- Inputs & Form Controls ---------- */
   .input,
@@ -356,7 +345,6 @@
   }
 }
 
-
 /* ---------------------------------------
    STAGE 10 ADDITIONS (minor layout glue for existing markup)
 --------------------------------------- */
@@ -381,11 +369,7 @@
   }
 }
 
-
-
 @layer layout { .card-header{ justify-content: space-between; } }
-
-
 
 @layer components {
   /* Прогресс: кнопки по краям, слайдер растягивается на всю ширину */
@@ -395,8 +379,6 @@
     min-inline-size: 0;
   }
 }
-
-
 
 /* === Stats cards: uniform layout (1col → 2col → 4col) === */
 @layer layout {
@@ -423,8 +405,9 @@
 
 /* Prefer container queries when available (main already has container-type) */
 @supports (container-type: inline-size) {
-  @container (min-width: 26rem) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
-  @container (min-width: 48rem) { .stats-row { grid-template-columns: repeat(4, 1fr); } }
+  @container (min-width: 20rem) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+  @container (min-width: 36rem) { .stats-row { grid-template-columns: repeat(4, 1fr); } }
 }
+
 
 
