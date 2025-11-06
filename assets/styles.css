@@ -263,7 +263,8 @@
   /* ---------- Cards ---------- */
   .card{ border:1px solid var(--border); background: var(--card); padding: var(--s-3); border-radius: var(--r-3); margin-block: var(--s-2); box-shadow: var(--shadow-1); }
   .card-title{ font-weight:600; margin: 0 0 var(--s-2); font-size: var(--fs-md); }
-  .card-actions{ display:flex; gap: var(--s-2); flex-wrap: wrap; }
+  .card-actions{ display:flex; gap: var(--s-2); flex-wrap: wrap;  justify-content: flex-start;   }
+  .card-percents {margin: var(--s-1) 0; padding: var(--s-1) 0;}
 
   /* ---------- Calendar cells ---------- */
   .calendar-grid .cell{
@@ -382,8 +383,17 @@
 
 
 
+@layer layout { .row.between{ justify-content: space-between; } }
+
+
+
 @layer components {
-  .btn-group.nowrap{ flex-wrap: nowrap; overflow: auto; -webkit-overflow-scrolling: touch; }
+  /* Прогресс: кнопки по краям, слайдер растягивается на всю ширину */
+  .card .row .btn { flex: 0 0 auto; }
+  .card .row .range {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
 }
 
 

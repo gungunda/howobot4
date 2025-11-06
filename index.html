@@ -33,10 +33,10 @@
 
         <div class="section">
           <div class="section-head">
-            <div class="btn-group nowrap" data-dashboard-actions>
-              <button class="btn btn-danger" data-action="reset-day">Очистить день</button>
+            <div data-dashboard-actions>
+              <button class="btn" data-action="reset-day">Очистить день</button>
               <button class="btn" data-action="reset-to-schedule">Вернуть к расписанию</button>
-              <button class="btn primary" data-action="add-task" title="Добавить задачу">+</button>
+              <button class="btn" data-action="add-task" title="Добавить задачу">+</button>
             </div>
           </div>
           <div class="task-list" data-dashboard-tasks></div>
@@ -44,7 +44,7 @@
 
         <div class="section" data-dashboard-offload-wrapper hidden>
           <div class="section-head">
-            <div class="muted">Разгрузка</div>
+            <h2 class="section-title">Разгрузка</h2>
           </div>
           <div class="task-list" data-dashboard-offload></div>
         </div>

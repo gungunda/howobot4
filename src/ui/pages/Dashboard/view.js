@@ -116,23 +116,24 @@ export class DashboardView{
     }, { once: true });
   }
 
-  /** Карточка основной задачи (без инлайнового редактирования минут). */
+  /** Карточка основной задачи.  */
   renderTaskCard(t){
     const card = document.createElement("div");
     card.className = "card";
     const hhmm = minutesToHhmm(t.minutes);
     card.innerHTML = `
-      <div class="row">
-        <strong>${t.title}</strong>
-        <span class="muted">${hhmm}</span>
+      <div class="row between">
+        <strong class="card-title">${t.title}</strong>
+        <strong class="card-title">${t.progress}% из ${hhmm}</strong>
       </div>
-      <div class="row">
+      <div class="row card-percents">
         <button class="btn" data-step="-1">−10%</button>
         <input class="range" type="range" min="0" max="100" step="10" value="${t.progress}">
         <button class="btn" data-step="+1">+10%</button>
-        <span>${t.progress}%</span>
-        <button class="btn" data-action="toggle">${t.closed ? "Открыть" : "Закрыть"}</button>
+      </div>
+      <div class="card-actions">
         <button class="btn" data-action="edit">Править</button>
+        <button class="btn" data-action="toggle">${t.closed ? "Открыть" : "Закрыть"}</button>
       </div>
     `;
     card.querySelector('[data-step="-1"]').addEventListener("click", () => this.h.onStep(t.id, -1));
@@ -149,15 +150,14 @@ export class DashboardView{
     card.className = "card";
     const hhmm = minutesToHhmm(o.minutes);
     card.innerHTML = `
-      <div class="row">
-        <strong>${o.title} на  ${DAY_NAMES[o.fromWeekday]}</strong>
-        <span class="muted">${hhmm}</span>
+      <div class="row between">
+        <strong  class="card-title">${o.title} на  ${DAY_NAMES[o.fromWeekday]}</strong>
+        <strong  class="card-title">${o.progress}% из ${hhmm}</strong>
       </div>
-      <div class="row">
+      <div class="row card-percents">
         <button class="btn" data-step="-1">−10%</button>
         <input class="range" type="range" min="0" max="100" step="10" value="${o.progress}">
         <button class="btn" data-step="+1">+10%</button>
-        <span>${o.progress}%</span>
       </div>
     `;
     card.querySelector('[data-step="-1"]').addEventListener("click", () => this.h.onOffloadStep(o.id, o.targetIso, -1));
@@ -166,6 +166,8 @@ export class DashboardView{
     return card;
   }
 }
+
+
 
 
 
