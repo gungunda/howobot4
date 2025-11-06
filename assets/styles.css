@@ -468,3 +468,28 @@
 
 }
 
+/* ---------- Schedule modals: unload label + checkbox group alignment ---------- */
+@layer components {
+  /* Правая колонка с чекбоксами тянется и не затекает под label */
+  .modal-card .form-row .unload-wrap { flex: 1 1 auto; min-inline-size: 0; }
+
+  /* Сетка разгрузки: компактные чекбоксы в несколько строк справа */
+  .modal-card .unload-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  .modal-card .unload-grid label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+    min-width: 0;
+  }
+
+  /* Узкий инпут минут: 3–4 символа */
+  .modal-card [data-f-min] {
+    inline-size: 10ch;
+  }
+}
+
+

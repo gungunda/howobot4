@@ -79,7 +79,7 @@ export class ScheduleView {
   openAddForm(weekday){
     const node = document.createElement("div");
     node.innerHTML = `
-      <h3>Новый предмет — ${WEEKDAYS_SHORT[weekday]}</h3>
+      <h3>Добавление: ${WEEKDAYS_FULL[weekday]}</h3>
       <div class="form-row">
         <label>Название</label>
         <input type="text" data-f-title placeholder="Введите название">
@@ -88,7 +88,7 @@ export class ScheduleView {
         <label>Минуты</label>
         <input type="number" min="0" step="10" data-f-min value="0">
       </div>
-      <div class="form-row" data-unloads></div>
+      <div class="form-row"><label>Разгрузка</label><div class="unload-wrap" data-unloads></div></div>
       <div class="form-actions">
         <button class="btn" data-save>Сохранить</button>
       </div>
@@ -111,7 +111,7 @@ export class ScheduleView {
   openEditForm(weekday, task){
     const node = document.createElement("div");
     node.innerHTML = `
-      <h3>Правка предмета — ${WEEKDAYS_FULL[weekday]}</h3>
+      <h3>Редактирование: ${WEEKDAYS_FULL[weekday]}</h3>
       <div class="form-row">
         <label>Название</label>
         <input type="text" data-f-title value="${task.title}">
@@ -120,7 +120,7 @@ export class ScheduleView {
         <label>Минуты</label>
         <input type="number" min="0" step="5" data-f-min value="${task.minutes}">
       </div>
-      <div class="form-row" data-unloads></div>
+      <div class="form-row"><label>Разгрузка</label><div class="unload-wrap" data-unloads></div></div>
       <div class="form-actions">
         <button class="btn" data-delete>Удалить предмет</button>
         <button class="btn" data-save>Сохранить</button>
@@ -189,6 +189,8 @@ export class ScheduleView {
     return out;
   }
 }
+
+
 
 
 
