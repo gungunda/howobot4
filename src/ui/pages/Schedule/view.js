@@ -4,7 +4,7 @@
  * В карточках предметов разгрузка показывается текстом, без чекбоксов.
  */
 import { minutesToHhmm } from "../../../utils/date.js";
-import { WEEKDAYS_FULL, WEEKDAYS_SHORT } from "../../../utils/locale.ru.js";
+import { WEEKDAYS_FULL, WEEKDAYS_SHORT, WEEKDAYS_GEN } from "../../../utils/locale.ru.js";
 import { ensureModalRoot, openModal } from "../../components/modal.js";
 
 const DAY = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];

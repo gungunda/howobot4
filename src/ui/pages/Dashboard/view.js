@@ -7,8 +7,7 @@
 import { minutesToHhmm } from "../../../utils/date.js";
 import { formatDayMonth } from "../../../utils/locale.ru.js";
 import { ensureModalRoot, openModal } from "../../components/modal.js";
-
-const DAY_NAMES = ["Пн","Вт","Ср","Чт","Пт","Сб","Вс"];
+import { WEEKDAYS_FULL, WEEKDAYS_SHORT, WEEKDAYS_GEN } from "../../../utils/locale.ru.js";
 
 export class DashboardView{
   /**
@@ -34,8 +33,7 @@ export class DashboardView{
     this.els.stats.planned.textContent = vm.metrics.load || "0:00";
     this.els.stats.done.textContent    = vm.metrics.done ?? "0%";
     this.els.stats.left.textContent    = vm.metrics.left || "0:00";
-    // ETA может называться finish — поддержим оба поля
-    this.els.stats.eta.textContent     = vm.metrics.eta || vm.metrics.finish || "0:00";
+    this.els.stats.eta.textContent     = vm.metrics.finish || "0:00";
 
     // Кнопки действий с задачами дня
     if (this.els.resetBtn){ this.els.resetBtn.onclick = () => this.h.onResetDay(); }
@@ -151,7 +149,7 @@ export class DashboardView{
     const hhmm = minutesToHhmm(o.minutes);
     card.innerHTML = `
       <div class="row card-header">
-        <strong  class="card-title">${o.title} на  ${DAY_NAMES[o.fromWeekday]}</strong>
+        <strong  class="card-title">${o.title} на  ${WEEKDAYS_GEN[o.fromWeekday]}</strong>
         <strong  class="card-title">${o.progress}% из ${hhmm}</strong>
       </div>
       <div class="row card-percents">
