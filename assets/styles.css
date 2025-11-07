@@ -22,14 +22,14 @@
     --bg: #ffffff;
     --fg: #1f2328;
     --muted: #6a737d;
-    --primary: #0b5fff;
+    --primary: #1d6844;
     --primary-contrast: #ffffff;
-    --danger: #ef4444;
+    --danger: #c05050;
     --danger-contrast: #ffffff;
     --border: #e2e8f0;
     --card: #f8fafc;
-    --focus-ring: rgba(11,95,255,.5);
-    --button: #e8e4e4; 
+    --focus-ring: rgba(11, 255, 88, 0.5);
+    --button: #dbdde0; 
 
     /* Доп. токены для состояния/акцентов */
     --accent-soft: rgba(11,95,255,.08);
@@ -74,9 +74,10 @@
       --card: #11161d;
       --primary: #829cc5;
       --focus-ring: rgba(59,130,246,.5);
+      --button: #2b3354;
       --accent-soft: rgba(59,130,246,.14);
       --sel: rgba(59,130,246,.18);
-      --button: #2b3354;
+
     }
   }
 }
