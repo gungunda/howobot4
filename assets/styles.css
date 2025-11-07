@@ -160,8 +160,8 @@
   .calendar-header{ display:flex; align-items:center; gap: var(--s-2); margin-block: var(--s-2); }
 
   .calendar-grid{
-    display:grid; grid-template-columns:repeat(7,1fr); gap: var(--s-1);
-    border-top:1px solid var(--border); padding-top: var(--s-2);
+    display:grid; grid-template-columns:repeat(7,1fr); gap: var(--s-2);
+    border-top:2px solid var(--border); padding-top: var(--s-2);
   }
 
   .footer{
@@ -267,7 +267,7 @@
   .calendar-grid .cell{
     display:flex; align-items:center; justify-content:center;
     padding: 0.5rem;
-    border:1px solid var(--border); border-radius: var(--r-3);
+    border:2px solid var(--border); border-radius: var(--r-3);
     background:var(--bg); cursor:pointer; user-select:none;
     min-height: 2.75rem; /* было 2.625rem — довёл до ≥44px */
     transition: box-shadow .15s ease, background-color .15s ease, border-color .15s ease;
@@ -374,7 +374,9 @@
   .cal-label{
     min-width: 8ch;
     text-align: center;
+    font-size: var(--fs-lg);
     font-weight: 600;
+    text-transform: capitalize;
   }
 }
 
