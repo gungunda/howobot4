@@ -70,13 +70,13 @@
       --bg: #0b0e12;
       --fg: #e8edf2;
       --muted: #9aa5b1;
-      --border: #2a3542;
+      --border: #3d526a;
       --card: #11161d;
-      --primary: #3b82f6;
+      --primary: #829cc5;
       --focus-ring: rgba(59,130,246,.5);
       --accent-soft: rgba(59,130,246,.14);
       --sel: rgba(59,130,246,.18);
-      --button: #3c2b54;
+      --button: #2b3354;
     }
   }
 }
