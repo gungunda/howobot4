@@ -22,14 +22,12 @@
     --bg: #ffffff;
     --fg: #1f2328;
     --muted: #6a737d;
-    --primary: #1d6844;
+    --primary: #4981a6;
     --primary-contrast: #ffffff;
-    --danger: #c05050;
-    --danger-contrast: #ffffff;
     --border: #e2e8f0;
     --card: #f8fafc;
     --focus-ring: rgba(11, 255, 88, 0.5);
-    --button: #dbdde0; 
+    --button: #e1e4e9; 
 
     /* Доп. токены для состояния/акцентов */
     --accent-soft: rgba(11,95,255,.08);
@@ -124,7 +122,7 @@
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
     gap: var(--s-3);
-    padding: max(var(--s-2), env(safe-area-inset-top)) var(--s-1) var(--s-3);
+    padding: max(var(--s-2), env(safe-area-inset-top)) var(--s-3) var(--s-3);
     border-bottom: 1px solid var(--border);
     background: var(--bg);
     position: sticky; top: 0; z-index: 10;
@@ -219,12 +217,6 @@
   .btn:active{ transform: translateY(1px); }
   .btn:disabled{ opacity:.6; cursor: not-allowed; }
 
-  .btn.primary { background: var(--primary); color: var(--primary-contrast); border-color: transparent; }
-  .btn.ghost   { background: transparent; border: 1px solid var(--border); }
-  .btn-danger  { color: var(--danger-contrast); background: var(--danger); border-color: var(--danger); }
-  .btn.full    { inline-size: 100%; }
-
-
   .btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
   .icon { width: 1.25em; height: 1.25em; vertical-align: -0.125em;  color: var(--muted); }
@@ -245,6 +237,7 @@
     background: var(--bg);
     transition: border-color .15s ease, box-shadow .15s ease;
   }
+  input[type="checkbox"] {accent-color: var(--primary);}
   input::placeholder, textarea::placeholder{ color: var(--muted); }
   :where(.input, input, select, textarea):focus-visible{
     outline: 3px solid var(--focus-ring);
@@ -262,7 +255,7 @@
   .card-percents {margin: var(--s-1) 0; padding: var(--s-1) 0;}
 
   /* ---------- Schedule ---------- */
-   .day-title{  margin: 0 0 var(--s-2); }
+   .day-title{  margin: 0 0 var(--s-2); text-transform: capitalize;}
 
   /* ---------- Calendar cells ---------- */
   .calendar-grid .cell{
@@ -389,6 +382,7 @@
   .card .row .range {
     flex: 1 1 auto;
     min-inline-size: 0;
+    accent-color: var(--primary);
   }
 }
 

@@ -53,15 +53,15 @@ export class ScheduleView {
     row.className = "row";
 
     const hhmm = minutesToHhmm(t.minutes);
-    const unloadTxt = this.formatUnload(t.unloadDays);
+    const unloadTxt = this.formatUnload(t.unloadDays) ? ` + ${this.formatUnload(t.unloadDays)}` : ``;
 
     row.innerHTML = `
       <div class="row">
         <strong>${t.title}</strong>
-        <span class="muted">${hhmm}</span>
+        <span class="muted">${hhmm}${unloadTxt}</span>
       </div>
       <div class="row">
-        <span class="muted">Разгр.: ${unloadTxt}</span>
+        <span class="muted"></span>
         <button class="btn" data-act="edit">✏️</button>
       </div>
     `;
@@ -71,7 +71,7 @@ export class ScheduleView {
   }
 
   formatUnload(arr){
-    if (!arr || arr.length === 0) return "—";
+    if (!arr || arr.length === 0) return null;
     const uniq = Array.from(new Set(arr)).filter(n => n>=0 && n<=6).sort((a,b)=>a-b);
     return uniq.map(n => DAY[n]).join(", ");
   }
