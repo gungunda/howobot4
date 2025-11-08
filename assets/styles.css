@@ -285,7 +285,7 @@
   /* ---------- Modal ---------- */
   .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; border: 2px; border-color: var(--border); }
   .modal[open] { display: flex; }
-  .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.7); }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.75); }
   .modal-card {
     position: relative;
     background: var(--bg);
@@ -297,7 +297,7 @@
     padding: var(--s-4);
     padding-bottom: max(var(--s-4), env(safe-area-inset-bottom));
   }
-  .modal-close { position: absolute; top: var(--s-2); right: var(--s-2); border: none; background: transparent; font-size: 1.25rem; cursor: pointer; }
+  .modal-close { position: absolute; top: var(--s-2); right: var(--s-2); border: none; background: transparent; font-size: 1.75rem; cursor: pointer; }
   .modal-card h3 { margin: 0 0 var(--s-3) 0; font-size: var(--fs-lg); }
   .form-row { display: flex; gap: var(--s-2); align-items: center; margin: var(--s-2) 0; }
   .form-row label { min-width: 6rem; }
