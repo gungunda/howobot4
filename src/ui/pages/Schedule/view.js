@@ -62,7 +62,7 @@ export class ScheduleView {
       </div>
       <div class="row">
         <span class="muted"></span>
-        <button class="btn" data-act="edit">✏️</button>
+        <button class="btn" data-act="edit"><span class="gray">✏️</span></button>
       </div>
     `;
 
