@@ -22,7 +22,7 @@
     --bg: #ffffff;
     --fg: #1f2328;
     --muted: #6a737d;
-    --primary: #4981a6;
+    --primary: #486e9f;
     --primary-contrast: #ffffff;
     --border: #c7cfd8;
     --card: #f8fafc;
@@ -212,7 +212,7 @@
     min-width: 2.5rem; 
   }
   @media (hover: hover) {
-    .btn:hover{ box-shadow: 0 1px 0 rgba(0,0,0,.06); background: var(--accent-soft); }
+    .btn:hover{ box-shadow: 0 1px 0 rgba(0,0,0,.5); background: var(--accent-soft); }
   }
   .btn:active{ transform: translateY(1px); }
   .btn:disabled{ opacity:.6; cursor: not-allowed; }
@@ -220,7 +220,7 @@
   .btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
   .icon { width: 1.25em; height: 1.25em; vertical-align: -0.125em; filter: grayscale(50); }
-  .btn-img { filter: sepia(100%) brightness(90%) hue-rotate(191deg) saturate(100%) contrast(200%); }
+  .btn-img { filter: sepia(100%) brightness(100%) hue-rotate(191deg) saturate(100%) contrast(100%); }
 
   /* ---------- Inputs & Form Controls ---------- */
   .input,
@@ -238,7 +238,7 @@
     background: var(--bg);
     transition: border-color .15s ease, box-shadow .15s ease;
   }
-  input[type="checkbox"] {appearance: none; accent-color: var(--primary); border:1px solid var(--border); background: var(--bg);}
+  input[type="checkbox"] { accent-color: var(--primary); border: 1px solid var(--border); background: var(--bg); }
   input::placeholder, textarea::placeholder{ color: var(--muted); }
   :where(.input, input, select, textarea):focus-visible{
     outline: 3px solid var(--focus-ring);
