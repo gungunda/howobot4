@@ -220,7 +220,7 @@
   .btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
   .icon { width: 1.25em; height: 1.25em; vertical-align: -0.125em; filter: grayscale(50); }
-  .btn-img { filter: grayscale(50);}
+  .btn-img { filter: sepia(100%) brightness(105%) hue-rotate(195deg) saturate(515%) contrast(503%); }
 
   /* ---------- Inputs & Form Controls ---------- */
   .input,
