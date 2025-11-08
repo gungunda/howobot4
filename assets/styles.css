@@ -283,7 +283,7 @@
   .calendar-grid .cell:focus-visible{ outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
   /* ---------- Modal ---------- */
-  .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; border: 2px; border-color: var(--border); }
+  .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000;  }
   .modal[open] { display: flex; }
   .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.75); }
   .modal-card {
@@ -292,6 +292,7 @@
     width: min(30rem, 92vw);
     max-height: 88dvh;
     overflow: auto;
+    border: 2px; border-color: var(--border);
     border-radius: var(--r-3);
     box-shadow: var(--shadow-2);
     padding: var(--s-4);
