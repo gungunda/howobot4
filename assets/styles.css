@@ -68,7 +68,7 @@
       --bg: #0b0e12;
       --fg: #e8edf2;
       --muted: #9aa5b1;
-      --border: #3d526a;
+      --border: #829cc5;
       --card: #11161d;
       --primary: #829cc5;
       --focus-ring: rgba(59,130,246,.5);
@@ -285,7 +285,7 @@
   /* ---------- Modal ---------- */
   .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; border: 2px; border-color: var(--border); }
   .modal[open] { display: flex; }
-  .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+  .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.7); }
   .modal-card {
     position: relative;
     background: var(--bg);
