@@ -291,8 +291,8 @@
     background: var(--bg);
     width: min(30rem, 92vw);
     max-height: 88dvh;
-    overflow: auto;
-    border: 2px; border-color: var(--border);
+    overflow: auto;   
+    border:2px solid var(--border); 
     border-radius: var(--r-3);
     box-shadow: var(--shadow-2);
     padding: var(--s-4);
