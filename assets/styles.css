@@ -68,7 +68,7 @@
       --bg: #0b0e12;
       --fg: #e8edf2;
       --muted: #9aa5b1;
-      --border: #829cc5;
+      --border: #6a95db;
       --card: #11161d;
       --primary: #829cc5;
       --focus-ring: rgba(59,130,246,.5);
@@ -220,7 +220,7 @@
   .btn:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
   .icon { width: 1.25em; height: 1.25em; vertical-align: -0.125em; filter: grayscale(50); }
-  .btn-img { filter: sepia(100%) brightness(105%) hue-rotate(195deg) saturate(515%) contrast(503%); }
+  .btn-img { filter: sepia(100%) brightness(90%) hue-rotate(191deg) saturate(100%) contrast(200%); }
 
   /* ---------- Inputs & Form Controls ---------- */
   .input,
@@ -238,7 +238,7 @@
     background: var(--bg);
     transition: border-color .15s ease, box-shadow .15s ease;
   }
-  input[type="checkbox"] {accent-color: var(--primary); border-color: var(--border); background-color: var(--bg);}
+  input[type="checkbox"] {accent-color: var(--primary); border:1px solid var(--border); background: var(--bg);}
   input::placeholder, textarea::placeholder{ color: var(--muted); }
   :where(.input, input, select, textarea):focus-visible{
     outline: 3px solid var(--focus-ring);
