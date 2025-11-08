@@ -238,7 +238,7 @@
     background: var(--bg);
     transition: border-color .15s ease, box-shadow .15s ease;
   }
-  input[type="checkbox"] {accent-color: var(--primary); border:1px solid var(--border); background: var(--bg);}
+  input[type="checkbox"] {appearance: none; accent-color: var(--primary); border:1px solid var(--border); background: var(--bg);}
   input::placeholder, textarea::placeholder{ color: var(--muted); }
   :where(.input, input, select, textarea):focus-visible{
     outline: 3px solid var(--focus-ring);
