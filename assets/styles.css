@@ -24,7 +24,7 @@
     --muted: #6a737d;
     --primary: #4981a6;
     --primary-contrast: #ffffff;
-    --border: #e2e8f0;
+    --border: #c7cfd8;
     --card: #f8fafc;
     --focus-ring: rgba(11, 255, 88, 0.5);
     --button: #e1e4e9; 
@@ -283,7 +283,7 @@
   .calendar-grid .cell:focus-visible{ outline: 3px solid var(--focus-ring); outline-offset: 2px; }
 
   /* ---------- Modal ---------- */
-  .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; }
+  .modal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 1000; border: 2px; border-color: var(--border); }
   .modal[open] { display: flex; }
   .modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
   .modal-card {
