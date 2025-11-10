@@ -131,7 +131,7 @@ export class DashboardView{
       </div>
       <div class="card-actions">
         <button class="btn" data-action="edit"><span class="btn-img">✏️</span></button>
-        <button class="btn" data-action="toggle">${t.closed ? "Открыть" : "X"}</button>
+        <button class="btn" data-action="toggle">${t.closed ? "Открыть" : "Закрыть"}</button>
       </div>
     `;
     card.querySelector('[data-step="-1"]').addEventListener("click", () => this.h.onStep(t.id, -1));
