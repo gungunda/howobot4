@@ -4,11 +4,11 @@
  * FIX: вычисляем W по дню D (а не по D+1), чтобы разгрузка срабатывала в правильный день.
  * Дополнено: metrics.done теперь в процентах по всем задачам дня (и закрытым, и открытым).
  */
-import { composeDPlus1View, loadSchedule, loadDay } from "../storage/storage.js";
+import { composeNextDayView, loadSchedule, loadDay } from "../storage/storage.js";
 import { minutesToHhmm, weekdayRu, toIsoDate, nextDateWithWeekdayMon0, addDays, addMinutes, timeHhmm } from "../utils/date.js";
 
-export function LoadDashboard(dPlus1Date) {
-  const { dateIso, tasks } = composeDPlus1View(dPlus1Date);
+export function LoadDashboard(nextDay) {
+  const { dateIso, tasks } = composeNextDayView(nextDay);
 
   // Минуты для «осталось» и ETA: считаем только по ОТКРЫТЫМ задачам (как было).
   const totalMinutesOpen = tasks.reduce((s, t) => s + (t.closed ? 0 : (t.minutes||0)), 0);

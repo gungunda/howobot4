@@ -26,7 +26,7 @@ export class DashboardPresenter {
   /** Рендер экрана. */
   render(){
     // D+1 — только для композиции показа
-    const d1 = date.dPlus1(this.baseDate);
+    const d1 = date.nextDay(this.baseDate);
     const vm = LoadDashboard(d1);
 
     const els = {

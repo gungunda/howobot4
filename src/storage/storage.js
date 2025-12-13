@@ -162,9 +162,9 @@ export function ensureDayTask(dateIso, taskId){
  *  - если override(D) нет — показываем чистое расписание для weekdayRu(D+1).
  * Возвращает { dateIso (D+1 ISO), tasks: Task[] }.
  */
-export function composeDPlus1View(dPlus1) {
-  const dateIso = toIsoDate(dPlus1);
-  const override = loadDay(toIsoDate(addDays(dPlus1, -1))); // DayTasks(D), где D = (D+1)-1
+export function composeNextDayView(nextDay) {
+  const dateIso = toIsoDate(nextDay);
+  const override = loadDay(toIsoDate(addDays(nextDay, -1))); // DayTasks(D), где D = (D+1)-1
 
   // Наличие оверрайда (даже пустого) полностью определяет список задач
   if (override) {
@@ -175,7 +175,7 @@ export function composeDPlus1View(dPlus1) {
   }
 
   // Нет оверрайда — чистое расписание
-  const w = weekdayRu(dPlus1);
+  const w = weekdayRu(nextDay);
   const schedule = loadSchedule();
   const base = schedule.list(w).map(t => new Task(t));
   return { dateIso, tasks: base };

@@ -18,7 +18,7 @@ export function copy(d) {
   return new Date(x.getTime());
 }
 
-export function dPlus1(d = today()) {
+export function nextDay(d = today()) {
   const x = copy(d);
   x.setDate(x.getDate() + 1);
   return x;
